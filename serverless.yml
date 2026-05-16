@@ -1,0 +1,240 @@
+service: memodi
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  environment:
+    DYNAMODB_PATIENTS_TABLE: memodi-patients
+    DYNAMODB_INTERACTIONS_TABLE: memodi-interactions
+    DYNAMODB_ALERTS_TABLE: memodi-alerts
+    DYNAMODB_CAREGIVERS_TABLE: memodi-caregivers
+    S3_PHOTOS_BUCKET: memodi-photos
+    S3_VOICE_BUCKET: memodi-voice-recordings
+    BEDROCK_MODEL_ID: anthropic.claude-sonnet-4-20250514
+    SNS_CAREGIVER_TOPIC_ARN: ${env:SNS_CAREGIVER_TOPIC_ARN}
+    JWT_SECRET: ${env:JWT_SECRET}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource:
+            - arn:aws:dynamodb:${self:provider.region}:*:table/memodi-*
+            - arn:aws:dynamodb:${self:provider.region}:*:table/memodi-*/index/*
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+            - s3:GetObject
+          Resource:
+            - arn:aws:s3:::memodi-*/*
+        - Effect: Allow
+          Action:
+            - bedrock:InvokeModel
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - polly:SynthesizeSpeech
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - transcribe:StartTranscriptionJob
+            - transcribe:GetTranscriptionJob
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - rekognition:SearchFacesByImage
+            - rekognition:IndexFaces
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - sns:Publish
+          Resource: '*'
+
+functions:
+  # Auth
+  registerPatient:
+    handler: lambda/registerPatient/index.handler
+    events:
+      - httpApi:
+          path: /auth/patient/register
+          method: POST
+  loginPatient:
+    handler: lambda/loginPatient/index.handler
+    events:
+      - httpApi:
+          path: /auth/patient/login
+          method: POST
+  registerCaregiver:
+    handler: lambda/registerCaregiver/index.handler
+    events:
+      - httpApi:
+          path: /auth/caregiver/register
+          method: POST
+  loginCaregiver:
+    handler: lambda/loginCaregiver/index.handler
+    events:
+      - httpApi:
+          path: /auth/caregiver/login
+          method: POST
+
+  # Core
+  processVoiceInput:
+    handler: lambda/processVoiceInput/index.handler
+    timeout: 90
+    events:
+      - httpApi:
+          path: /voice
+          method: POST
+  uploadMemory:
+    handler: lambda/uploadMemory/index.handler
+    timeout: 30
+    events:
+      - httpApi:
+          path: /memory
+          method: POST
+  identifyPhoto:
+    handler: lambda/identifyPhoto/index.handler
+    timeout: 30
+    events:
+      - httpApi:
+          path: /identify
+          method: POST
+  getPatient:
+    handler: lambda/getPatient/index.handler
+    events:
+      - httpApi:
+          path: /patient/{patientId}
+          method: GET
+  getAlerts:
+    handler: lambda/getAlerts/index.handler
+    events:
+      - httpApi:
+          path: /alerts/{patientId}
+          method: GET
+  resolveAlert:
+    handler: lambda/resolveAlert/index.handler
+    events:
+      - httpApi:
+          path: /alerts/{alertId}/resolve
+          method: POST
+  getInteractions:
+    handler: lambda/getInteractions/index.handler
+    events:
+      - httpApi:
+          path: /interactions/{patientId}
+          method: GET
+  getScheduledMessage:
+    handler: lambda/getScheduledMessage/index.handler
+    timeout: 60
+    events:
+      - schedule: rate(15 minutes)
+
+resources:
+  Resources:
+    PatientsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: memodi-patients
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: patientId
+            AttributeType: S
+          - AttributeName: email
+            AttributeType: S
+          - AttributeName: connectionCode
+            AttributeType: S
+        KeySchema:
+          - AttributeName: patientId
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: EmailIndex
+            KeySchema:
+              - AttributeName: email
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+          - IndexName: ConnectionCodeIndex
+            KeySchema:
+              - AttributeName: connectionCode
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+
+    InteractionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: memodi-interactions
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: interactionId
+            AttributeType: S
+          - AttributeName: patientId
+            AttributeType: S
+          - AttributeName: timestamp
+            AttributeType: S
+        KeySchema:
+          - AttributeName: interactionId
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: PatientIdIndex
+            KeySchema:
+              - AttributeName: patientId
+                KeyType: HASH
+              - AttributeName: timestamp
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+    AlertsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: memodi-alerts
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: alertId
+            AttributeType: S
+          - AttributeName: patientId
+            AttributeType: S
+          - AttributeName: timestamp
+            AttributeType: S
+        KeySchema:
+          - AttributeName: alertId
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: PatientIdIndex
+            KeySchema:
+              - AttributeName: patientId
+                KeyType: HASH
+              - AttributeName: timestamp
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
+    CaregiversTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: memodi-caregivers
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: caregiverId
+            AttributeType: S
+          - AttributeName: email
+            AttributeType: S
+        KeySchema:
+          - AttributeName: caregiverId
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: EmailIndex
+            KeySchema:
+              - AttributeName: email
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
