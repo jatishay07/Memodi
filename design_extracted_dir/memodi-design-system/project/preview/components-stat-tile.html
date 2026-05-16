@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Memodi — Stat Tile</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="https://unpkg.com/lucide@0.487.0/dist/umd/lucide.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    width: 700px; height: 200px;
+    background: var(--gradient-page);
+    padding: 28px 32px;
+    box-sizing: border-box;
+    font-family: var(--font-body);
+    color: var(--foreground);
+  }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .tile {
+    background: rgba(255,255,255,0.65);
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(255,255,255,0.85);
+    border-radius: 24px;
+    padding: 20px 22px;
+    display: flex; flex-direction: column; gap: 8px;
+    box-shadow: 0 8px 22px rgba(45,45,45,0.06);
+  }
+  .head { display:flex; align-items:center; justify-content: space-between; }
+  .lbl  { font-family: var(--font-body); font-size: 15px; font-weight: 500; color: var(--muted-foreground); }
+  .icon {
+    width: 36px; height: 36px; border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff;
+  }
+  /* Flat icon colors — no gradients */
+  .icon.olive   { background: #9E9820; }
+  .icon.rose    { background: #DC4F7C; }
+  .icon.tomato  { background: #C42B34; }
+
+  .num {
+    font-family: var(--font-serif);
+    font-size: 44px;
+    font-weight: 400;
+    line-height: 1;
+    color: #4a3f33;
+  }
+</style>
+</head>
+<body>
+  <div class="grid">
+    <div class="tile">
+      <div class="head">
+        <span class="lbl">Active alerts</span>
+        <span class="icon olive"><i data-lucide="alert-circle" style="width:18px;height:18px"></i></span>
+      </div>
+      <div class="num">4</div>
+    </div>
+    <div class="tile">
+      <div class="head">
+        <span class="lbl">This week</span>
+        <span class="icon rose"><i data-lucide="clock" style="width:18px;height:18px"></i></span>
+      </div>
+      <div class="num">12</div>
+    </div>
+    <div class="tile">
+      <div class="head">
+        <span class="lbl">Severe</span>
+        <span class="icon tomato"><i data-lucide="alert-triangle" style="width:18px;height:18px"></i></span>
+      </div>
+      <div class="num">1</div>
+    </div>
+  </div>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

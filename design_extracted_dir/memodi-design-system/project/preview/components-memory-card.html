@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Memodi — Memory Polaroid</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="https://unpkg.com/lucide@0.487.0/dist/umd/lucide.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    width: 700px; height: 320px;
+    background: var(--gradient-page);
+    padding: 22px 32px 18px;
+    box-sizing: border-box;
+    font-family: var(--font-body);
+    color: var(--foreground);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start;
+    gap: 16px;
+  }
+
+  .stack { display: flex; gap: 22px; align-items: center; justify-content: center; }
+
+  /* Resting polaroid — image + title only. Description, metadata, and
+     voice-note indicator are revealed in the cinematic detail modal that
+     opens on click (see <MemoryModal /> in ui_kits/patient/MemoryLane.jsx). */
+  .card {
+    width: 188px; flex-shrink: 0;
+    border-radius: 24px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(8px);
+    border: 2px solid rgba(255,255,255,0.98);
+    box-shadow: 0 16px 36px rgba(45,45,45,0.10);
+    transition: transform .35s ease, box-shadow .35s ease;
+  }
+  .card:hover {
+    transform: translateY(-6px) rotate(0deg) !important;
+    box-shadow: 0 24px 56px rgba(45,45,45,0.16);
+  }
+  .card.tilt  { transform: rotate(-2deg); }
+  .card.tilt2 { transform: rotate(2.5deg); }
+
+  /* Flat colored placeholder squares (real product uses photographs) */
+  .img { aspect-ratio: 1.05; }
+  .img1 { background: #DC4F7C; }
+  .img2 { background: #9E9820; }
+  .img3 { background: #FC8A2D; }
+
+  .body { padding: 14px 16px 16px; }
+  .title {
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 500;
+    margin: 0;
+    color: #4a3f33;
+    line-height: 1.2;
+  }
+  .date {
+    margin-top: 6px;
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: var(--muted-foreground);
+    letter-spacing: 0.04em;
+  }
+
+  /* Click-to-open hint — below the polaroids, in its own row */
+  .hint {
+    font-family: var(--font-body);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+</style>
+</head>
+<body>
+  <div class="stack">
+    <div class="card tilt">
+      <div class="img img1"></div>
+      <div class="body">
+        <div class="title">Summer Garden</div>
+        <div class="date">June 2018</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="img img2"></div>
+      <div class="body">
+        <div class="title">Family Gathering</div>
+        <div class="date">November 2019</div>
+      </div>
+    </div>
+    <div class="card tilt2">
+      <div class="img img3"></div>
+      <div class="body">
+        <div class="title">Beach Sunset</div>
+        <div class="date">August 2020</div>
+      </div>
+    </div>
+  </div>
+  <div class="hint">tap a memory to open it</div>
+</body>
+</html>

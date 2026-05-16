@@ -1,0 +1,324 @@
+/* =========================================================
+   MEMODI DESIGN SYSTEM — colors_and_type.css
+   A peaceful digital sanctuary for memory care.
+   =========================================================
+   Import after the fonts in fonts.css (or use the
+   Google Fonts @import below). Designed for accessibility:
+   base font size is 18px, hit targets ≥ 44px, never use
+   text smaller than 14px for primary content.
+   ========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;400;500;600;700&family=Nunito:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* ----------------------------------------------------------
+     CORE WARM PALETTE — the five Memodi colors
+     ---------------------------------------------------------- */
+  --color-blush-rose:        #DC4F7C;  /* primary — warmth, speaking orb glow */
+  --color-tomato-jam:        #C42B34;  /* destructive, distress, severe alert */
+  --color-vanilla-custard:   #FCE9AB;  /* accent — soft sunlight, chip backgrounds */
+  --color-princeton-orange:  #FC8A2D;  /* secondary — listening orb, action buttons */
+  --color-olive:             #9E9820;  /* tertiary — thinking orb, mild alert */
+
+  /* Soft neutrals built from warm bias */
+  --color-cream:             #FFF9F0;  /* card backgrounds, sidebars */
+  --color-warm-white:        #FFFBF7;  /* app background */
+  --color-muted-warm:        #F5EFE7;  /* muted surface */
+  --color-switch-bg:         #E5D5C5;  /* off-state switch */
+
+  /* Inks */
+  --color-ink:               #2D2D2D;  /* foreground text */
+  --color-ink-soft:          #6B6B6B;  /* secondary text */
+  --color-ink-faint:         #9C9C9C;  /* tertiary / metadata */
+
+  /* ----------------------------------------------------------
+     SEMANTIC COLOR TOKENS
+     ---------------------------------------------------------- */
+  --background:              var(--color-warm-white);
+  --foreground:              var(--color-ink);
+  --surface:                 var(--color-cream);
+  --surface-elev:            rgba(255, 255, 255, 0.60);   /* glass card */
+  --surface-elev-strong:     rgba(255, 255, 255, 0.85);   /* modal/sheet */
+
+  --primary:                 var(--color-blush-rose);
+  --primary-foreground:      #FFFFFF;
+  --secondary:               var(--color-princeton-orange);
+  --secondary-foreground:    #FFFFFF;
+  --tertiary:                var(--color-olive);
+  --tertiary-foreground:     #FFFFFF;
+  --accent:                  var(--color-vanilla-custard);
+  --accent-foreground:       var(--color-ink);
+
+  --muted:                   var(--color-muted-warm);
+  --muted-foreground:        var(--color-ink-soft);
+
+  --destructive:             var(--color-tomato-jam);
+  --destructive-foreground:  #FFFFFF;
+
+  /* Alert severity ramps — escalate WARMTH, not contrast */
+  --severity-mild:           var(--color-olive);
+  --severity-mild-tint:      rgba(158, 152, 32, 0.18);
+  --severity-medium:         var(--color-princeton-orange);
+  --severity-medium-tint:    rgba(252, 138, 45, 0.20);
+  --severity-severe:         var(--color-tomato-jam);
+  --severity-severe-tint:    rgba(196, 43, 52, 0.18);
+
+  /* Borders / outlines — kept very soft */
+  --border:                  rgba(0, 0, 0, 0.08);
+  --border-glass:            rgba(255, 255, 255, 0.80);
+  --ring:                    var(--color-blush-rose);
+
+  /* ----------------------------------------------------------
+     SIGNATURE GRADIENTS — Memodi visual DNA
+     ---------------------------------------------------------- */
+  --gradient-sunset:         linear-gradient(135deg, #FC8A2D 0%, #DC4F7C 100%);
+  --gradient-dawn:           linear-gradient(135deg, #DC4F7C 0%, #FC8A2D 50%, #DC4F7C 100%);
+  --gradient-meadow:         linear-gradient(135deg, #FC8A2D 0%, #9E9820 100%);
+  --gradient-warmth:         linear-gradient(135deg, #DC4F7C 0%, #FC8A2D 50%, #FCE9AB 100%);
+  --gradient-page:           linear-gradient(135deg, #FFF9F0 0%, #FFFBF7 40%, rgba(252,233,171,0.30) 100%);
+  --gradient-text-warm:      linear-gradient(90deg, #DC4F7C 0%, #FC8A2D 50%, #DC4F7C 100%);
+
+  /* Orb state gradients (radial) */
+  --orb-idle:                radial-gradient(circle, #FC8A2D 0%, #DC4F7C 40%, #FCE9AB 100%);
+  --orb-listening:           radial-gradient(circle, #FC8A2D 0%, #FCE9AB 60%, #FC8A2D 100%);
+  --orb-thinking:            radial-gradient(circle, #9E9820 0%, #FC8A2D 50%, #FCE9AB 100%);
+  --orb-speaking:            radial-gradient(circle, #DC4F7C 0%, #FC8A2D 50%, #DC4F7C 100%);
+  --orb-distress:            radial-gradient(circle, #C42B34 0%, #DC4F7C 60%, #C42B34 100%);
+
+  /* ----------------------------------------------------------
+     TYPOGRAPHY — soft serif headers + rounded sans body
+     ---------------------------------------------------------- */
+  --font-serif:              'Crimson Pro', 'Georgia', 'Cambria', serif;
+  --font-sans:               'Nunito', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+  --font-heading:            var(--font-serif);
+  --font-body:               var(--font-sans);
+
+  /* Base size is 18px — larger than typical for accessibility. */
+  --font-size:               18px;
+
+  /* Type scale (line-height baked in) */
+  --text-xs:                 0.75rem;    /* 13.5px — metadata, captions only */
+  --text-sm:                 0.875rem;   /* 15.75px — secondary labels */
+  --text-base:               1rem;       /* 18px — body */
+  --text-lg:                 1.125rem;   /* 20.25px — emphasized body */
+  --text-xl:                 1.375rem;   /* 24.75px — h4 / large body */
+  --text-2xl:                1.625rem;   /* 29.25px — h3 / card titles */
+  --text-3xl:                2rem;       /* 36px — h2 / page titles */
+  --text-4xl:                2.5rem;     /* 45px — large page heads */
+  --text-5xl:                3.25rem;    /* 58.5px — feature heads */
+  --text-6xl:                4rem;       /* 72px — section heroes */
+  --text-7xl:                5rem;       /* 90px — landing wordmark */
+
+  --leading-tight:           1.15;
+  --leading-snug:            1.30;
+  --leading-normal:          1.50;
+  --leading-relaxed:         1.65;
+
+  --weight-light:            300;
+  --weight-normal:           400;
+  --weight-medium:           500;
+  --weight-semibold:         600;
+  --weight-bold:             700;
+
+  /* Accessibility A / A+ / A++ multipliers for patient flow */
+  --a11y-text-scale:         1;     /* 1 / 1.20 / 1.40 */
+
+  /* ----------------------------------------------------------
+     SHAPE — generously rounded throughout
+     ---------------------------------------------------------- */
+  --radius-xs:               8px;
+  --radius-sm:               14px;
+  --radius-md:               20px;
+  --radius-lg:               24px;
+  --radius-xl:               32px;
+  --radius-2xl:              40px;
+  --radius-pill:             999px;
+
+  /* ----------------------------------------------------------
+     SPACING — generous, calm rhythm
+     ---------------------------------------------------------- */
+  --space-1:                 4px;
+  --space-2:                 8px;
+  --space-3:                 12px;
+  --space-4:                 16px;
+  --space-5:                 20px;
+  --space-6:                 24px;
+  --space-8:                 32px;
+  --space-10:                40px;
+  --space-12:                48px;
+  --space-16:                64px;
+  --space-20:                80px;
+  --space-24:                96px;
+
+  /* ----------------------------------------------------------
+     SHADOWS — soft, tinted, warm
+     ---------------------------------------------------------- */
+  --shadow-xs:               0 1px 2px rgba(45, 45, 45, 0.04);
+  --shadow-sm:               0 2px 8px rgba(45, 45, 45, 0.06);
+  --shadow-md:               0 8px 24px rgba(45, 45, 45, 0.08);
+  --shadow-lg:               0 16px 40px rgba(45, 45, 45, 0.10);
+  --shadow-xl:               0 24px 60px rgba(45, 45, 45, 0.12);
+  --shadow-glow-rose:        0 8px 40px rgba(220, 79, 124, 0.40);
+  --shadow-glow-orange:      0 8px 40px rgba(252, 138, 45, 0.40);
+  --shadow-glow-olive:       0 8px 40px rgba(158, 152, 32, 0.35);
+  --shadow-glow-distress:    0 0 60px rgba(196, 43, 52, 0.55);
+  --shadow-glass:            0 16px 40px rgba(45, 45, 45, 0.08),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.60);
+
+  /* ----------------------------------------------------------
+     BLUR — used for glassmorphism + ambient blobs
+     ---------------------------------------------------------- */
+  --blur-glass:              20px;
+  --blur-blob:               100px;
+
+  /* ----------------------------------------------------------
+     MOTION — slow, breathing, organic
+     ---------------------------------------------------------- */
+  --ease-soft:               cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-breath:             cubic-bezier(0.45, 0.05, 0.55, 0.95);
+  --ease-bounce:             cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --dur-fast:                250ms;
+  --dur-base:                500ms;
+  --dur-slow:                800ms;
+  --dur-breath:              4000ms;   /* orb breathing cycle */
+  --dur-blob:                20000ms;  /* ambient background drift */
+}
+
+/* =========================================================
+   BASE ELEMENT STYLING
+   ========================================================= */
+html {
+  font-size: var(--font-size);
+}
+
+body {
+  background: var(--gradient-page);
+  background-attachment: fixed;
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  font-weight: var(--weight-normal);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-tight);
+  color: var(--foreground);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+h1 { font-size: var(--text-5xl); font-weight: var(--weight-normal); }
+h2 { font-size: var(--text-4xl); }
+h3 { font-size: var(--text-2xl); }
+h4 { font-size: var(--text-xl); }
+h5 { font-size: var(--text-lg); }
+h6 { font-size: var(--text-base); font-weight: var(--weight-semibold); }
+
+p {
+  margin: 0;
+  line-height: var(--leading-relaxed);
+}
+
+/* Patient-facing text — uses the accessibility scale variable */
+.a11y-text {
+  font-size: calc(var(--text-xl) * var(--a11y-text-scale));
+  line-height: var(--leading-relaxed);
+}
+
+/* =========================================================
+   SIGNATURE UTILITY CLASSES
+   ========================================================= */
+
+/* Wordmark / display heading gradient */
+.text-warm-gradient {
+  background: var(--gradient-text-warm);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  /* WebKit clips the last glyph of background-clipped text when the font has
+     any right-side overhang OR negative letter-spacing. Two-prong fix: */
+  display: inline-block;
+  padding-right: 0.12em;
+  letter-spacing: normal;
+}
+
+/* Glass card — the recurring Memodi container */
+.glass {
+  background: var(--surface-elev);
+  backdrop-filter: blur(var(--blur-glass));
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+  border: 2px solid var(--border-glass);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-glass);
+}
+
+.glass-strong {
+  background: var(--surface-elev-strong);
+  backdrop-filter: blur(var(--blur-glass));
+  -webkit-backdrop-filter: blur(var(--blur-glass));
+  border: 2px solid #FFFFFF;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Pill button — primary action */
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-pill);
+  border: 0;
+  background: var(--gradient-sunset);
+  color: #FFFFFF;
+  font-family: var(--font-body);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  box-shadow: var(--shadow-glow-rose);
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-soft),
+              box-shadow var(--dur-fast) var(--ease-soft);
+  min-height: 48px;
+}
+.btn-pill:hover  { transform: scale(1.04); }
+.btn-pill:active { transform: scale(0.96); }
+
+/* =========================================================
+   AMBIENT MOTION KEYFRAMES
+   ========================================================= */
+@keyframes breath {
+  0%, 100% { transform: scale(1);     filter: brightness(1); }
+  50%      { transform: scale(1.05);  filter: brightness(1.08); }
+}
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0); }
+  50%      { transform: translate(40px, 30px); }
+}
+@keyframes float-up {
+  0%, 100% { transform: translateY(0);   opacity: 0.3; }
+  50%      { transform: translateY(-30px); opacity: 0.7; }
+}
+@keyframes pulse-ring {
+  0%       { transform: scale(1);   opacity: 0.6; }
+  100%     { transform: scale(2);   opacity: 0; }
+}
+
+.anim-breath  { animation: breath  var(--dur-breath) var(--ease-breath) infinite; }
+.anim-drift   { animation: drift   var(--dur-blob)   var(--ease-breath) infinite; }
+.anim-float   { animation: float-up 5s var(--ease-breath) infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-breath, .anim-drift, .anim-float { animation: none; }
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

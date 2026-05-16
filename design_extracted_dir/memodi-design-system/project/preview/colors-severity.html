@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Memodi — Severity Ramp</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    width: 700px; height: 220px;
+    background: var(--gradient-page);
+    padding: 24px 28px;
+    box-sizing: border-box;
+    font-family: var(--font-body);
+    color: var(--foreground);
+  }
+  .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; height: 100%; }
+  .alert {
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    backdrop-filter: blur(8px);
+    border: 2px solid;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .alert .top { display:flex; align-items:center; gap: 12px; }
+  .dot { width: 36px; height: 36px; border-radius: 999px; box-shadow: var(--shadow-md); }
+  .label { font-family: var(--font-serif); font-size: 22px; font-weight: 500; }
+  .badge { align-self: flex-start; padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; background: rgba(255,255,255,0.6); letter-spacing: 0.08em; }
+  .hex { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; opacity: 0.75; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="alert" style="background: linear-gradient(135deg, rgba(158,152,32,0.20), rgba(252,233,171,0.20)); border-color: rgba(158,152,32,0.35); color: #5a560c;">
+      <div class="top">
+        <div class="dot" style="background:#9E9820"></div>
+        <div class="label">Mild</div>
+      </div>
+      <div>
+        <div class="badge" style="color:#9E9820">MILD</div>
+        <div class="hex" style="margin-top:8px">#9E9820 · Olive</div>
+      </div>
+    </div>
+    <div class="alert" style="background: linear-gradient(135deg, rgba(252,138,45,0.22), rgba(252,233,171,0.20)); border-color: rgba(252,138,45,0.45); color: #b8500e;">
+      <div class="top">
+        <div class="dot" style="background:#FC8A2D"></div>
+        <div class="label">Medium</div>
+      </div>
+      <div>
+        <div class="badge" style="color:#FC8A2D">MEDIUM</div>
+        <div class="hex" style="margin-top:8px">#FC8A2D · Princeton Orange</div>
+      </div>
+    </div>
+    <div class="alert" style="background: linear-gradient(135deg, rgba(196,43,52,0.22), rgba(220,79,124,0.18)); border-color: rgba(196,43,52,0.50); color: #8a1117;">
+      <div class="top">
+        <div class="dot" style="background:#C42B34"></div>
+        <div class="label">Severe</div>
+      </div>
+      <div>
+        <div class="badge" style="color:#C42B34">SEVERE</div>
+        <div class="hex" style="margin-top:8px">#C42B34 · Tomato Jam</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

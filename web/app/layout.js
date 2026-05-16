@@ -4,13 +4,13 @@ import ClientTabNav from '../components/ClientTabNav';
 
 export const metadata = {
   title: 'Memodi',
-  description: 'A warm memory companion for dementia patients'
+  description: 'Helping memories stay close.'
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="bg-navy min-h-screen flex flex-col">
+      <body>
         <Providers>
           <main className="flex-1 pb-20 md:pb-0 md:pl-56">
             {children}

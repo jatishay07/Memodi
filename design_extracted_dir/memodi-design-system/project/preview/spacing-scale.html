@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Memodi — Spacing Scale</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    width: 700px; height: 230px;
+    background: var(--gradient-page);
+    padding: 24px 32px;
+    box-sizing: border-box;
+    font-family: var(--font-body);
+    color: var(--foreground);
+  }
+  table { width: 100%; border-collapse: collapse; }
+  tr { height: 22px; }
+  td { vertical-align: middle; padding: 0; font-size: 12px; color: var(--muted-foreground); }
+  td.token { font-family: var(--font-serif); color: var(--foreground); font-size: 16px; width: 90px; }
+  td.bar { width: auto; }
+  .bar div { background: var(--gradient-sunset); height: 12px; border-radius: 999px; }
+  td.px { width: 60px; text-align: right; font-weight: 600; }
+</style>
+</head>
+<body>
+  <table>
+    <tr><td class="token">space-1</td><td class="bar"><div style="width:4px"></div></td><td class="px">4 px</td></tr>
+    <tr><td class="token">space-2</td><td class="bar"><div style="width:8px"></div></td><td class="px">8 px</td></tr>
+    <tr><td class="token">space-3</td><td class="bar"><div style="width:12px"></div></td><td class="px">12 px</td></tr>
+    <tr><td class="token">space-4</td><td class="bar"><div style="width:16px"></div></td><td class="px">16 px</td></tr>
+    <tr><td class="token">space-6</td><td class="bar"><div style="width:24px"></div></td><td class="px">24 px</td></tr>
+    <tr><td class="token">space-8</td><td class="bar"><div style="width:32px"></div></td><td class="px">32 px</td></tr>
+    <tr><td class="token">space-12</td><td class="bar"><div style="width:48px"></div></td><td class="px">48 px</td></tr>
+    <tr><td class="token">space-16</td><td class="bar"><div style="width:64px"></div></td><td class="px">64 px</td></tr>
+    <tr><td class="token">space-24</td><td class="bar"><div style="width:96px"></div></td><td class="px">96 px</td></tr>
+  </table>
+</body>
+</html>
