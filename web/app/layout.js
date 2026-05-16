@@ -1,7 +1,6 @@
-import { Suspense } from 'react';
 import './globals.css';
 import Providers from './providers';
-import TabNav from '../components/TabNav';
+import ClientTabNav from '../components/ClientTabNav';
 
 export const metadata = {
   title: 'Memodi',
@@ -16,9 +15,7 @@ export default function RootLayout({ children }) {
           <main className="flex-1 pb-20 md:pb-0 md:pl-56">
             {children}
           </main>
-          <Suspense fallback={null}>
-            <TabNav />
-          </Suspense>
+          <ClientTabNav />
         </Providers>
       </body>
     </html>
