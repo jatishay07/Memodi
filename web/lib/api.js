@@ -38,6 +38,12 @@ export async function registerCaregiver(data) {
 export async function loginCaregiver(data) {
   return request('/auth/caregiver/login', { method: 'POST', body: JSON.stringify(data) });
 }
+export async function verifyEmail(email, code) {
+  return request('/auth/verify', { method: 'POST', body: JSON.stringify({ email, code }) });
+}
+export async function resendVerificationCode(email) {
+  return request('/auth/verify', { method: 'POST', body: JSON.stringify({ email, resend: true }) });
+}
 
 // Patient API
 export async function sendVoiceInput(patientId, audioBase64) {
