@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Memodi — Shadow Ramp</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    width: 700px; height: 220px;
+    background: var(--gradient-page);
+    padding: 26px 28px;
+    box-sizing: border-box;
+    font-family: var(--font-body);
+    color: var(--foreground);
+  }
+  .row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; height: 100%; align-items: center; }
+  .card {
+    height: 110px;
+    border-radius: var(--radius-lg);
+    background: #FFFBF7;
+    border: 1px solid var(--border);
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 12px 14px;
+    font-size: 11px;
+    color: var(--muted-foreground);
+  }
+  .tag { font-family: var(--font-serif); font-size: 18px; color: var(--foreground); font-weight: 500; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="card" style="box-shadow: var(--shadow-sm)">
+      <div class="tag">Subtle</div><div>shadow-sm — chips</div>
+    </div>
+    <div class="card" style="box-shadow: var(--shadow-md)">
+      <div class="tag">Card</div><div>shadow-md — list cards</div>
+    </div>
+    <div class="card" style="box-shadow: var(--shadow-lg)">
+      <div class="tag">Lift</div><div>shadow-lg — hover cards</div>
+    </div>
+    <div class="card" style="box-shadow: var(--shadow-xl)">
+      <div class="tag">Float</div><div>shadow-xl — modals</div>
+    </div>
+  </div>
+</body>
+</html>

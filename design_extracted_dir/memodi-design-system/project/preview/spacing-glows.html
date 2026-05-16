@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Memodi — Glow Shadows</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    width: 700px; height: 220px;
+    background: var(--gradient-page);
+    padding: 28px;
+    box-sizing: border-box;
+    font-family: var(--font-body);
+    color: var(--foreground);
+  }
+  .row { display:grid; grid-template-columns: repeat(4, 1fr); gap: 18px; height: 100%; align-items: center; justify-items: center; }
+  .item { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .orb {
+    width: 84px; height: 84px; border-radius: 999px;
+  }
+  .label { font-size: 11px; color: var(--muted-foreground); letter-spacing: 0.04em; text-align: center; }
+  .label b { display:block; font-family: var(--font-serif); font-size: 16px; color: var(--foreground); font-weight: 500; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="item">
+      <div class="orb" style="background: var(--gradient-dawn); box-shadow: var(--shadow-glow-rose);"></div>
+      <div class="label"><b>Rose glow</b>speaking · primary</div>
+    </div>
+    <div class="item">
+      <div class="orb" style="background: var(--gradient-sunset); box-shadow: var(--shadow-glow-orange);"></div>
+      <div class="label"><b>Orange glow</b>listening · CTA</div>
+    </div>
+    <div class="item">
+      <div class="orb" style="background: var(--gradient-meadow); box-shadow: var(--shadow-glow-olive);"></div>
+      <div class="label"><b>Olive glow</b>thinking · caregiver</div>
+    </div>
+    <div class="item">
+      <div class="orb" style="background: radial-gradient(circle, #C42B34, #DC4F7C); box-shadow: var(--shadow-glow-distress);"></div>
+      <div class="label"><b>Distress glow</b>severe alerts only</div>
+    </div>
+  </div>
+</body>
+</html>

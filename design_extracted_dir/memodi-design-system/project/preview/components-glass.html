@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Memodi — Glass Card Anatomy</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    width: 700px; height: 260px;
+    background: var(--gradient-page);
+    padding: 24px 30px;
+    box-sizing: border-box;
+    font-family: var(--font-body);
+    color: var(--foreground);
+    position: relative;
+    overflow: hidden;
+  }
+  /* ambient blobs to show backdrop-filter effect */
+  .blob {
+    position: absolute; width: 240px; height: 240px; border-radius: 999px;
+    filter: blur(60px); opacity: 0.55; pointer-events: none;
+  }
+  .b1 { background: radial-gradient(circle, #FC8A2D, transparent); top: -60px; left: 80px; }
+  .b2 { background: radial-gradient(circle, #DC4F7C, transparent); top: 60px; right: -40px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; height: 100%; position: relative; z-index: 1; }
+  .card {
+    border-radius: 32px;
+    padding: 22px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .standard {
+    background: rgba(255,255,255,0.60);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 2px solid rgba(255,255,255,0.80);
+    box-shadow: var(--shadow-lg);
+  }
+  .strong {
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    border: 2px solid #FFFFFF;
+    box-shadow: var(--shadow-xl);
+  }
+  h3 { font-family: var(--font-serif); font-weight: 500; font-size: 22px; margin: 0; }
+  p  { font-size: 14px; color: var(--muted-foreground); margin: 0; }
+  code { font-family: ui-monospace, 'SF Mono', monospace; font-size: 11px; color: var(--color-blush-rose); }
+</style>
+</head>
+<body>
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="grid">
+    <div class="card standard">
+      <h3>Standard glass</h3>
+      <p>Translucent cream over ambient blobs. The brand's most common surface.</p>
+      <code>bg: rgba(#fff, 0.60)</code>
+      <code>blur(20px) · border 2px #fff/80</code>
+      <code>radius 32 · shadow-lg</code>
+    </div>
+    <div class="card strong">
+      <h3>Strong glass</h3>
+      <p>For modals over a scrim. Nearly opaque, hard 2-px white edge.</p>
+      <code>bg: rgba(#fff, 0.95)</code>
+      <code>over: bg-black/50 backdrop-blur-sm</code>
+      <code>radius 32 · shadow-xl</code>
+    </div>
+  </div>
+</body>
+</html>

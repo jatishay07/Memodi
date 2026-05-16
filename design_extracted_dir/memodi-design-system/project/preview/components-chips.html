@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Memodi — Chips & Tags</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="https://unpkg.com/lucide@0.487.0/dist/umd/lucide.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    width: 700px; height: 220px;
+    background: var(--gradient-page);
+    padding: 28px 32px;
+    box-sizing: border-box;
+    font-family: var(--font-body);
+    color: var(--foreground);
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .lbl { font-size: 11px; color: var(--muted-foreground); letter-spacing: 0.1em; text-transform: uppercase; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .chip {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    background: rgba(252,233,171,0.55);
+    color: #6B6B6B;
+    font-weight: 500;
+  }
+  .chip.solid { background: var(--color-vanilla-custard); color: var(--foreground); }
+  .chip.rose  { background: rgba(220,79,124,0.14); color: var(--color-blush-rose); }
+  .chip.olive { background: rgba(158,152,32,0.18); color: var(--color-olive); }
+  .badge {
+    padding: 4px 12px; border-radius: 999px; font-size: 11px;
+    font-weight: 700; letter-spacing: 0.08em; background: rgba(255,255,255,0.55);
+  }
+  .verified {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px 4px 6px; border-radius: 999px;
+    background: #DC4F7C; color: #fff; font-size: 12px; font-weight: 600;
+    box-shadow: var(--shadow-glow-rose);
+  }
+  .verified i { width: 16px; height: 16px; }
+  .dot {
+    width: 8px; height: 8px; border-radius: 999px;
+    background: #C42B34; box-shadow: 0 0 0 0 rgba(196,43,52,0.6);
+    animation: pulse 1.4s infinite;
+  }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(196,43,52,0.5);} 70%{ box-shadow: 0 0 0 10px rgba(196,43,52,0);} 100%{ box-shadow: 0 0 0 0 rgba(196,43,52,0);} }
+</style>
+</head>
+<body>
+  <div>
+    <div class="lbl">Memory tags</div>
+    <div class="row" style="margin-top:6px;">
+      <span class="chip">garden</span>
+      <span class="chip">flowers</span>
+      <span class="chip">summer</span>
+      <span class="chip">family</span>
+      <span class="chip">thanksgiving</span>
+      <span class="chip">beach</span>
+      <span class="chip">sunset</span>
+    </div>
+  </div>
+  <div>
+    <div class="lbl">Severity badges</div>
+    <div class="row" style="margin-top:6px;">
+      <span class="badge" style="color:#9E9820">MILD</span>
+      <span class="badge" style="color:#FC8A2D">MEDIUM</span>
+      <span class="badge" style="color:#C42B34">SEVERE</span>
+    </div>
+  </div>
+  <div>
+    <div class="lbl">Status indicators</div>
+    <div class="row" style="margin-top:6px;">
+      <span class="verified"><i data-lucide="check-circle"></i>Verified</span>
+      <span class="chip rose"><i data-lucide="play" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:4px"></i>Voice note available</span>
+      <span class="chip olive">Pending review</span>
+      <span class="row" style="gap:6px"><span class="dot"></span><span style="font-size:13px; color: var(--muted-foreground); font-weight:500;">New alerts</span></span>
+    </div>
+  </div>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

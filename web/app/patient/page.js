@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { Mic } from 'lucide-react';
 import Orb from '../../components/Orb';
+import Ambient from '../../components/Ambient';
+import PatientNav from '../../components/PatientNav';
 import { useAuth } from '../../lib/auth';
 import { getPatient, sendVoiceInput } from '../../lib/api';
 import { requestAudioPermission, startRecording, stopRecordingAndGetBase64, playAudioBase64 } from '../../lib/audio';
@@ -10,7 +13,7 @@ import { requestAudioPermission, startRecording, stopRecordingAndGetBase64, play
 function greeting(name) {
   const h = new Date().getHours();
   const salutation = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-  return `${salutation},\n${name}`;
+  return `${salutation}, ${name}`;
 }
 
 function formatClock() {
@@ -23,14 +26,14 @@ function formatClock() {
 
 export default function PatientPage() {
   const router = useRouter();
-  const { user, ready } = useAuth();
+  const { user, ready, logout } = useAuth();
 
   const [orbState, setOrbState] = useState('idle');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [patient, setPatient] = useState(null);
   const [response, setResponse] = useState('');
-  const [showResponse, setShowResponse] = useState(false);
+  const [textScale, setTextScale] = useState(1);
   const [clock, setClock] = useState(formatClock());
   const [error, setError] = useState('');
   const audioRef = useRef(null);
@@ -49,7 +52,9 @@ export default function PatientPage() {
     return () => clearInterval(t);
   }, [ready, user]);
 
-  async function handleOrbClick() {
+  const cycleScale = () => setTextScale(s => s === 1 ? 1.2 : s === 1.2 ? 1.4 : 1);
+
+  async function handleMic() {
     if (isProcessing) return;
     setError('');
 
@@ -58,7 +63,7 @@ export default function PatientPage() {
         await startRecording();
         setIsRecording(true);
         setOrbState('listening');
-        setShowResponse(false);
+        setResponse('');
       } catch {
         setError('Microphone unavailable — please allow access in your browser.');
       }
@@ -67,7 +72,7 @@ export default function PatientPage() {
 
     setIsRecording(false);
     setIsProcessing(true);
-    setOrbState('speaking');
+    setOrbState('thinking');
 
     try {
       const base64 = await stopRecordingAndGetBase64();
@@ -77,7 +82,6 @@ export default function PatientPage() {
 
       setOrbState(result.isDistressed ? 'distress' : 'speaking');
       setResponse(result.response);
-      setShowResponse(true);
 
       if (audioRef.current) audioRef.current.pause();
       const audio = await playAudioBase64(result.audioResponse);
@@ -85,44 +89,140 @@ export default function PatientPage() {
       audio.onended = () => setOrbState('idle');
     } catch (err) {
       console.error(err);
-      setError('Something went wrong. Try again.');
+      setError('Let me try that again.');
       setOrbState('idle');
     } finally {
       setIsProcessing(false);
     }
   }
 
+  function reset() { setResponse(''); setOrbState('idle'); setIsRecording(false); }
+
   if (!ready) return null;
 
-  const name = patient?.nickname || patient?.name?.split(' ')[0] || user?.name?.split(' ')[0] || '…';
-  const greet = greeting(name);
-  const hint = isProcessing ? 'Processing…' : isRecording ? 'Tap to send' : 'Tap to speak';
+  const name = patient?.nickname || patient?.name?.split(' ')[0] || user?.name?.split(' ')[0] || '';
+  const hint = isProcessing ? "I'm thinking…" : isRecording ? 'Listening…' : 'Tap to speak with me';
+  const micActive = isRecording;
 
   return (
-    <div className="min-h-screen bg-navy flex flex-col items-center justify-between py-12 px-6 select-none">
-      <div className="text-center mt-4">
-        <h1 className="text-white text-3xl font-light tracking-wide whitespace-pre-line leading-snug">
-          {greet}
-        </h1>
+    <div style={{
+      position: 'relative', minHeight: '100vh', overflow: 'hidden',
+      background: 'linear-gradient(135deg, #FFF9F0 0%, #FFFBF7 40%, rgba(252,233,171,0.10) 100%)',
+    }}>
+      <Ambient particleCount={8} />
+
+      <PatientNav onSignOut={logout} />
+
+      {/* Greeting + clock */}
+      <div style={{
+        position: 'absolute', top: 24, right: 32, zIndex: 10,
+        textAlign: 'right',
+      }}>
+        {name && (
+          <p style={{ fontFamily: 'var(--font-serif)', fontSize: 18, color: '#6B6B6B', margin: 0, fontWeight: 400 }}>
+            {greeting(name)}
+          </p>
+        )}
+        <p style={{ fontFamily: 'var(--font-serif)', fontSize: 28, color: '#2D2D2D', margin: '2px 0 0', fontWeight: 400 }}>
+          {clock.time}
+        </p>
+        <p style={{ fontSize: 13, color: '#9C9C9C', margin: 0 }}>{clock.day}</p>
       </div>
 
-      <div className="flex flex-col items-center gap-6">
-        <Orb state={orbState} size={200} onClick={handleOrbClick} />
+      {/* Main content */}
+      <div style={{
+        position: 'relative', zIndex: 2,
+        minHeight: '100vh', padding: '120px 32px 64px',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+      }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          gap: 56, width: '100%', maxWidth: 1200,
+        }}>
+          {/* Orb */}
+          <div style={{
+            transition: 'transform .8s ease',
+            transform: response ? 'translateX(-80px) scale(0.75)' : 'translateX(0) scale(1)',
+          }}>
+            <Orb state={orbState} size={response ? 260 : 320} />
+          </div>
 
-        {showResponse && (
-          <div className="response-fade-in bg-white/5 rounded-2xl px-6 py-4 max-w-sm text-center">
-            <p className="text-gray-300 text-base italic leading-relaxed">{response}</p>
+          {/* Response card */}
+          {response && (
+            <div style={{
+              maxWidth: 520, padding: '36px 40px', borderRadius: 32,
+              background: 'rgba(255,255,255,0.78)',
+              backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+              border: '2px solid rgba(255,255,255,0.9)',
+              boxShadow: '0 24px 60px rgba(45,45,45,0.12)',
+              animation: 'slideInRight .6s ease',
+            }}>
+              <p style={{
+                margin: '0 0 28px',
+                fontSize: 22 * textScale,
+                lineHeight: 1.55, color: '#2D2D2D',
+                fontFamily: 'var(--font-sans)',
+              }}>
+                {response}
+              </p>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <button onClick={cycleScale} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  padding: '11px 20px', borderRadius: 999, border: 0,
+                  background: '#DC4F7C', color: '#fff',
+                  fontWeight: 600, fontSize: 15, cursor: 'pointer',
+                  boxShadow: '0 8px 20px rgba(220,79,124,0.26)',
+                  fontFamily: 'var(--font-sans)',
+                }}>
+                  {textScale === 1 ? 'Aa' : textScale === 1.2 ? 'Aa+' : 'Aa++'}
+                </button>
+                <button onClick={reset} style={{
+                  padding: '11px 20px', borderRadius: 999,
+                  border: '2px solid rgba(255,255,255,0.9)',
+                  background: 'rgba(255,255,255,0.6)',
+                  backdropFilter: 'blur(10px)',
+                  color: '#6B6B6B', fontWeight: 500, fontSize: 15, cursor: 'pointer',
+                  fontFamily: 'var(--font-sans)',
+                }}>
+                  Speak again
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Mic button */}
+        {!response && (
+          <div style={{ marginTop: 64, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+            <button
+              onClick={handleMic}
+              aria-label={hint}
+              onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.94)'; }}
+              onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+              style={{
+                width: 96, height: 96, borderRadius: '50%', border: 0,
+                background: micActive ? '#C42B34' : '#DC4F7C',
+                color: '#fff', cursor: 'pointer',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                animation: micActive ? 'micPulse 1.5s ease-out infinite' : 'none',
+                transition: 'background .3s ease, transform .2s ease',
+                boxShadow: micActive
+                  ? '0 0 0 0 rgba(220,79,124,0.5), 0 8px 28px rgba(220,79,124,0.32)'
+                  : '0 8px 28px rgba(220,79,124,0.32)',
+              }}
+            >
+              <Mic size={40} />
+            </button>
+            <p style={{
+              fontSize: 22 * textScale, color: '#6B6B6B',
+              fontFamily: 'var(--font-sans)',
+            }}>
+              {error || hint}
+            </p>
           </div>
         )}
-
-        <p className={`text-sm tracking-wide ${orbState === 'distress' ? 'text-pink' : 'text-gray-500'}`}>
-          {error || hint}
-        </p>
-      </div>
-
-      <div className="text-center pb-4">
-        <p className="text-cream text-sm tracking-wide mb-1">{clock.day}</p>
-        <p className="text-cream text-4xl font-extralight tracking-widest">{clock.time}</p>
       </div>
     </div>
   );

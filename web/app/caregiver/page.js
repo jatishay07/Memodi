@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AlertCard from '../../components/AlertCard';
+import CaregiverNav from '../../components/CaregiverNav';
+import CaregiverAmbient from '../../components/CaregiverAmbient';
 import { useAuth } from '../../lib/auth';
 import { getAlerts, getInteractions, resolveAlert } from '../../lib/api';
-
-const TABS = ['Alerts', 'Interactions', 'Summary'];
 
 function formatTime(iso) {
   const d = new Date(iso);
@@ -18,9 +18,9 @@ function formatTime(iso) {
 
 export default function CaregiverPage() {
   const router = useRouter();
-  const { user, ready } = useAuth();
+  const { user, ready, logout } = useAuth();
 
-  const [tab, setTab] = useState('Alerts');
+  const [tab, setTab] = useState('alerts');
   const [alerts, setAlerts] = useState([]);
   const [interactions, setInteractions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,12 +38,8 @@ export default function CaregiverPage() {
       getAlerts(user.patientId),
       getInteractions(user.patientId, 30)
     ]);
-    if (alertsRes.status === 'fulfilled') {
-      setAlerts(Array.isArray(alertsRes.value) ? alertsRes.value : []);
-    }
-    if (interactionsRes.status === 'fulfilled') {
-      setInteractions(Array.isArray(interactionsRes.value) ? interactionsRes.value : []);
-    }
+    if (alertsRes.status === 'fulfilled')       setAlerts(Array.isArray(alertsRes.value) ? alertsRes.value : []);
+    if (interactionsRes.status === 'fulfilled') setInteractions(Array.isArray(interactionsRes.value) ? interactionsRes.value : []);
     setLoading(false);
   }
 
@@ -66,102 +62,132 @@ export default function CaregiverPage() {
   const todayCount = safeInteractions.filter(i => new Date(i.timestamp).toDateString() === new Date().toDateString()).length;
 
   return (
-    <div className="min-h-screen bg-navy">
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        <div className="mb-6">
-          <h1 className="text-white text-2xl font-semibold mb-4">Caregiver Dashboard</h1>
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { num: unresolved.length, label: 'Active alerts' },
-              { num: todayCount, label: 'Today' },
-              { num: distressCount, label: 'Distress events', red: distressCount > 0 }
-            ].map((s, i) => (
-              <div key={i} className="bg-navy-card border border-navy-border rounded-xl p-3 text-center">
-                <p className={`text-2xl font-bold ${s.red ? 'text-pink' : 'text-white'}`}>{s.num}</p>
-                <p className="text-gray-500 text-xs mt-1">{s.label}</p>
-              </div>
-            ))}
-          </div>
+    <div style={{ position: 'relative', minHeight: '100vh', paddingBottom: 64 }}>
+      <CaregiverAmbient />
+      <CaregiverNav onSignOut={logout} unread={unresolved.length} />
+
+      <div style={{
+        position: 'relative', zIndex: 1,
+        padding: '120px 40px 0', maxWidth: 980, margin: '0 auto',
+      }}>
+        <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 52, fontWeight: 400, margin: 0, letterSpacing: '-0.01em' }}>
+          Alerts &amp; notifications
+        </h1>
+        <p style={{ fontSize: 18, color: '#6B6B6B', margin: '8px 0 36px' }}>
+          Monitor and respond to important events
+        </p>
+
+        {/* Stat tiles */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 18, marginBottom: 36 }}>
+          <StatTile label="Active alerts"  value={unresolved.length} color="#9E9820" />
+          <StatTile label="Today"          value={todayCount}        color="#DC4F7C" />
+          <StatTile label="Distress events" value={distressCount}   color="#C42B34" />
         </div>
 
-        <div className="flex gap-1 mb-6 bg-[#111827] rounded-xl p-1">
-          {TABS.map(t => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors relative ${
-                tab === t ? 'bg-[#1C1408] text-amber' : 'text-gray-500 hover:text-gray-300'
-              }`}
-            >
-              {t}
-              {t === 'Alerts' && unresolved.length > 0 && (
-                <span className="absolute top-1.5 right-2 bg-red-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                  {unresolved.length}
-                </span>
-              )}
+        {/* Tab bar */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 28 }}>
+          {[['alerts', 'Alerts'], ['interactions', 'Interactions'], ['summary', 'Weekly summary']].map(([id, label]) => (
+            <button key={id} onClick={() => setTab(id)} style={{
+              padding: '10px 22px', borderRadius: 999, border: 'none',
+              background: tab === id ? '#FC8A2D' : 'rgba(255,255,255,0.65)',
+              color: tab === id ? '#fff' : '#6B6B6B',
+              fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500,
+              cursor: 'pointer', boxShadow: tab === id ? '0 8px 20px rgba(252,138,45,0.26)' : 'none',
+              backdropFilter: 'blur(10px)', transition: 'all .2s ease',
+            }}>
+              {label}
             </button>
           ))}
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-2 border-amber border-t-transparent rounded-full animate-spin" />
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 80 }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: '50%',
+              border: '3px solid rgba(220,79,124,0.25)',
+              borderTopColor: '#DC4F7C',
+              animation: 'orbSpin .8s linear infinite',
+            }} />
           </div>
         ) : (
           <>
-            {tab === 'Alerts' && (
+            {tab === 'alerts' && (
               <>
-                {safeAlerts.length === 0 && <Empty icon="✓" text="No alerts. All is well." />}
+                {safeAlerts.length === 0 && <Empty text="No alerts. All is well." />}
                 {unresolved.map(a => <AlertCard key={a.alertId} alert={a} onResolve={handleResolve} />)}
                 {resolved.length > 0 && (
                   <>
-                    <p className="text-gray-500 text-xs uppercase tracking-wider mt-4 mb-3">Resolved</p>
+                    <p style={{ fontSize: 13, color: '#9C9C9C', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '24px 0 12px' }}>
+                      Resolved
+                    </p>
                     {resolved.map(a => <AlertCard key={a.alertId} alert={a} />)}
                   </>
                 )}
               </>
             )}
 
-            {tab === 'Interactions' && (
+            {tab === 'interactions' && (
               <>
                 {safeInteractions.length === 0 && <Empty text="No interactions recorded yet." />}
                 {safeInteractions.map(i => (
-                  <div key={i.interactionId} className="bg-navy-card border border-navy-border rounded-xl p-4 mb-3">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className={`text-xs uppercase tracking-wider px-2 py-0.5 rounded font-semibold ${
-                        i.type === 'distress' ? 'bg-[#1F0A0A] text-pink'
-                          : i.type === 'proactive' ? 'bg-[#0A1F0A] text-green-400'
-                          : 'bg-[#1F2937] text-gray-400'
-                      }`}>{i.type}</span>
-                      <span className="text-gray-500 text-xs">{formatTime(i.timestamp)}</span>
+                  <div key={i.interactionId} style={{
+                    borderRadius: 24, padding: '22px 26px', marginBottom: 16,
+                    background: 'rgba(255,255,255,0.65)',
+                    backdropFilter: 'blur(20px)',
+                    border: '2px solid rgba(255,255,255,0.85)',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                      <span style={{
+                        fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.10em',
+                        fontWeight: 700, padding: '4px 12px', borderRadius: 999,
+                        background: i.type === 'distress' ? 'rgba(196,43,52,0.15)'
+                          : i.type === 'proactive' ? 'rgba(158,152,32,0.15)' : 'rgba(0,0,0,0.06)',
+                        color: i.type === 'distress' ? '#C42B34' : i.type === 'proactive' ? '#9E9820' : '#6B6B6B',
+                      }}>
+                        {i.type}
+                      </span>
+                      <span style={{ fontSize: 13, color: '#9C9C9C' }}>{formatTime(i.timestamp)}</span>
                     </div>
                     {i.patientSaid && (
-                      <div className="mb-2">
-                        <p className="text-gray-500 text-xs mb-1">Patient said:</p>
-                        <p className="text-gray-300 text-sm italic">"{i.patientSaid}"</p>
+                      <div style={{ marginBottom: 12 }}>
+                        <p style={{ fontSize: 13, color: '#9C9C9C', margin: '0 0 4px' }}>Patient said:</p>
+                        <p style={{ fontSize: 16, color: '#2D2D2D', fontStyle: 'italic', margin: 0 }}>
+                          &ldquo;{i.patientSaid}&rdquo;
+                        </p>
                       </div>
                     )}
                     <div>
-                      <p className="text-gray-500 text-xs mb-1">Memodi:</p>
-                      <p className="text-amber text-sm italic">{i.memodiResponded}</p>
+                      <p style={{ fontSize: 13, color: '#9C9C9C', margin: '0 0 4px' }}>Memodi:</p>
+                      <p style={{ fontSize: 16, color: '#FC8A2D', margin: 0 }}>{i.memodiResponded}</p>
                     </div>
                   </div>
                 ))}
               </>
             )}
 
-            {tab === 'Summary' && (
-              <div className="bg-navy-card border border-navy-border rounded-xl p-6">
-                <h2 className="text-white text-lg font-semibold mb-1">Weekly Summary</h2>
-                <p className="text-gray-500 text-sm mb-6">Full analytics coming soon</p>
+            {tab === 'summary' && (
+              <div style={{
+                borderRadius: 32, padding: '32px 36px',
+                background: 'rgba(255,255,255,0.65)',
+                backdropFilter: 'blur(20px)',
+                border: '2px solid rgba(255,255,255,0.85)',
+              }}>
+                <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 30, fontWeight: 500, margin: '0 0 24px' }}>
+                  Weekly summary
+                </h2>
                 {[
-                  { num: safeInteractions.length, label: 'Total interactions', color: 'text-amber' },
-                  { num: distressCount, label: 'Distress events', color: 'text-pink' },
-                  { num: safeAlerts.length, label: 'Total alerts', color: 'text-amber' }
-                ].map((s, i) => (
-                  <div key={i} className="flex items-center gap-4 mb-5">
-                    <span className={`text-4xl font-bold w-16 ${s.color}`}>{s.num}</span>
-                    <span className="text-gray-400 text-sm">{s.label}</span>
+                  ['Total interactions', safeInteractions.length],
+                  ['Distress events', distressCount],
+                  ['Total alerts', safeAlerts.length],
+                ].map(([label, value]) => (
+                  <div key={label} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '12px 0', borderBottom: '1px solid rgba(0,0,0,0.06)',
+                  }}>
+                    <span style={{ fontSize: 16, color: '#6B6B6B' }}>{label}</span>
+                    <span style={{ fontFamily: 'var(--font-serif)', fontSize: 32, color: '#2D2D2D', fontWeight: 400 }}>
+                      {value}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -173,11 +199,35 @@ export default function CaregiverPage() {
   );
 }
 
-function Empty({ icon, text }) {
+function StatTile({ label, value, color }) {
   return (
-    <div className="flex flex-col items-center py-16 text-center">
-      {icon && <span className="text-4xl mb-3">{icon}</span>}
-      <p className="text-gray-500">{text}</p>
+    <div style={{
+      padding: '22px 26px', borderRadius: 24,
+      background: 'rgba(255,255,255,0.65)',
+      backdropFilter: 'blur(20px)',
+      border: '2px solid rgba(255,255,255,0.85)',
+      boxShadow: '0 8px 24px rgba(45,45,45,0.06)',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <span style={{ fontSize: 16, color: '#6B6B6B' }}>{label}</span>
+        <span style={{
+          width: 40, height: 40, borderRadius: 999, background: color,
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <span style={{ color: '#fff', fontSize: 18 }}>◉</span>
+        </span>
+      </div>
+      <div style={{ fontFamily: 'var(--font-serif)', fontSize: 48, lineHeight: 1, fontWeight: 400, color: '#2D2D2D' }}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function Empty({ text }) {
+  return (
+    <div style={{ padding: '64px 0', textAlign: 'center' }}>
+      <p style={{ fontSize: 18, color: '#9C9C9C', margin: 0 }}>{text}</p>
     </div>
   );
 }

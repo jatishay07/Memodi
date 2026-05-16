@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Memodi — Iconography</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="https://unpkg.com/lucide@0.487.0/dist/umd/lucide.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    width: 700px; height: 240px;
+    background: var(--gradient-page);
+    padding: 22px 28px;
+    box-sizing: border-box;
+    font-family: var(--font-body);
+    color: var(--foreground);
+  }
+  .grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 12px 10px; }
+  .ico {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 10px 4px;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,255,255,0.7);
+  }
+  .ico i { width: 24px; height: 24px; color: var(--color-blush-rose); }
+  .ico span { font-size: 10px; color: var(--muted-foreground); text-align: center; }
+  .meta { font-size: 11px; color: var(--muted-foreground); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+  <div class="meta">Lucide · 2-px stroke · rounded caps · 24 px default</div>
+  <div class="grid">
+    <div class="ico"><i data-lucide="heart"></i><span>heart</span></div>
+    <div class="ico"><i data-lucide="users"></i><span>users</span></div>
+    <div class="ico"><i data-lucide="mic"></i><span>mic</span></div>
+    <div class="ico"><i data-lucide="volume-2"></i><span>volume-2</span></div>
+    <div class="ico"><i data-lucide="type"></i><span>type</span></div>
+    <div class="ico"><i data-lucide="home"></i><span>home</span></div>
+    <div class="ico"><i data-lucide="images"></i><span>images</span></div>
+    <div class="ico"><i data-lucide="database"></i><span>database</span></div>
+    <div class="ico"><i data-lucide="bell"></i><span>bell</span></div>
+    <div class="ico"><i data-lucide="calendar"></i><span>calendar</span></div>
+    <div class="ico"><i data-lucide="map-pin"></i><span>map-pin</span></div>
+    <div class="ico"><i data-lucide="tag"></i><span>tag</span></div>
+    <div class="ico"><i data-lucide="upload"></i><span>upload</span></div>
+    <div class="ico"><i data-lucide="play"></i><span>play</span></div>
+    <div class="ico"><i data-lucide="check-circle"></i><span>check-circle</span></div>
+    <div class="ico"><i data-lucide="plus"></i><span>plus</span></div>
+    <div class="ico"><i data-lucide="x"></i><span>x</span></div>
+    <div class="ico"><i data-lucide="alert-circle"></i><span>alert-circle</span></div>
+    <div class="ico"><i data-lucide="pill"></i><span>pill</span></div>
+    <div class="ico"><i data-lucide="brain"></i><span>brain</span></div>
+    <div class="ico"><i data-lucide="alert-triangle"></i><span>alert-triangle</span></div>
+    <div class="ico"><i data-lucide="clock"></i><span>clock</span></div>
+  </div>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

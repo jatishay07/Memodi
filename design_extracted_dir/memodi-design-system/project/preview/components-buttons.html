@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Memodi — Buttons</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="https://unpkg.com/lucide@0.487.0/dist/umd/lucide.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    width: 700px; height: 280px;
+    background: var(--gradient-page);
+    padding: 30px;
+    box-sizing: border-box;
+    font-family: var(--font-body);
+    color: var(--foreground);
+    display: flex; flex-direction: column; gap: 16px; justify-content: center;
+  }
+  .row { display: flex; gap: 14px; align-items: center; }
+  .lbl { width: 80px; font-size: 11px; color: var(--muted-foreground); letter-spacing: 0.06em; text-transform: uppercase; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 28px;
+    border-radius: 999px;
+    border: 0;
+    font: inherit; font-weight: 600; font-size: 17px;
+    cursor: pointer;
+    transition: transform 0.2s, filter 0.2s;
+  }
+  .btn:hover { filter: brightness(1.06); }
+  .btn:active { transform: scale(0.97); }
+
+  /* Flat colors — no gradients */
+  .primary     { background: #DC4F7C; color: #fff; box-shadow: 0 8px 20px rgba(220,79,124,0.28); }
+  .caregiver   { background: #FC8A2D; color: #fff; box-shadow: 0 8px 20px rgba(252,138,45,0.28); }
+  .destructive { background: #C42B34; color: #fff; box-shadow: 0 8px 20px rgba(196,43,52,0.28); }
+
+  .ghost {
+    background: rgba(255,255,255,0.6);
+    color: var(--foreground);
+    border: 2px solid rgba(255,255,255,0.85);
+    backdrop-filter: blur(20px);
+  }
+  .ghost-warn {
+    background: rgba(255,255,255,0.6);
+    color: #C42B34;
+    border: 2px solid rgba(196,43,52,0.32);
+    backdrop-filter: blur(20px);
+  }
+
+  .iconbtn {
+    width: 56px; height: 56px; border-radius: 999px; border: 0;
+    background: #DC4F7C; color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 24px rgba(220,79,124,0.32);
+    cursor: pointer;
+  }
+  .mic {
+    width: 72px; height: 72px;
+    background: #DC4F7C;
+    box-shadow: 0 0 0 8px rgba(220,79,124,0.16), 0 12px 28px rgba(220,79,124,0.32);
+  }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="lbl">Patient</div>
+    <button class="btn primary"><i data-lucide="mic" style="width:18px;height:18px"></i>Tap to speak</button>
+    <button class="btn ghost"><i data-lucide="type" style="width:18px;height:18px"></i>Aa+</button>
+    <div class="iconbtn mic"><i data-lucide="mic" style="width:30px;height:30px"></i></div>
+  </div>
+  <div class="row">
+    <div class="lbl">Caregiver</div>
+    <button class="btn caregiver"><i data-lucide="plus" style="width:18px;height:18px"></i>Add memory</button>
+    <button class="btn ghost">View details</button>
+    <button class="btn ghost">Mark resolved</button>
+  </div>
+  <div class="row">
+    <div class="lbl">Destructive</div>
+    <button class="btn destructive"><i data-lucide="alert-triangle" style="width:18px;height:18px"></i>Emergency</button>
+    <button class="btn ghost-warn">Cancel</button>
+  </div>
+  <script>lucide.createIcons();</script>
+</body>
+</html>
