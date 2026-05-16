@@ -1,0 +1,6 @@
+services:
+  piper-tts:
+    build: ./services/piper-tts
+    ports:
+      - "59125:59125"
+    restart: unless-stopped

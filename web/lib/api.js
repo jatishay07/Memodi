@@ -1,4 +1,10 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
+const USE_LOCAL_API = process.env.NEXT_PUBLIC_USE_LOCAL_API === 'true';
+
+function apiUrl(path) {
+  if (USE_LOCAL_API) return `/api${path}`;
+  const base = (process.env.NEXT_PUBLIC_API_BASE_URL || '').replace(/\/$/, '');
+  return `${base}${path}`;
+}
 
 function authHeader() {
   if (typeof window === 'undefined') return {};
@@ -12,7 +18,7 @@ function authHeader() {
 }
 
 async function request(path, options = {}) {
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const res = await fetch(apiUrl(path), {
     headers: { 'Content-Type': 'application/json', ...authHeader(), ...(options.headers ?? {}) },
     ...options,
   });
@@ -23,6 +29,10 @@ async function request(path, options = {}) {
     throw err;
   }
   return body;
+}
+
+export function isLocalApi() {
+  return USE_LOCAL_API;
 }
 
 // Auth
@@ -41,7 +51,11 @@ export async function loginCaregiver(data) {
 
 // Patient API
 export async function sendVoiceInput(patientId, audioBase64) {
-  return request('/voice', { method: 'POST', body: JSON.stringify({ patientId, audioBase64 }) });
+  const clientTts = process.env.NEXT_PUBLIC_TTS_PROVIDER === 'piper';
+  return request('/voice', {
+    method: 'POST',
+    body: JSON.stringify({ patientId, audioBase64, clientTts }),
+  });
 }
 export async function getPatient(patientId) {
   return request(`/patient/${patientId}`);

@@ -84,8 +84,9 @@ export const handler = async (event) => {
   try { body = JSON.parse(event.body || "{}"); }
   catch { return respond(400, { error: "Invalid JSON body" }); }
 
-  const { patientId, audioBase64 } = body;
+  const { patientId, audioBase64, clientTts } = body;
   if (!patientId || !audioBase64) return respond(400, { error: "patientId and audioBase64 are required" });
+  const useClientTts = clientTts === true;
 
   try {
     const patient = await getPatient(patientId);
@@ -97,10 +98,8 @@ export const handler = async (event) => {
     const memoryContext = await queryMemoryBank(patient, transcribedText);
     const responseText = await generateResponse(transcribedText, memoryContext, patient);
 
-    const [distressResult, audioResponse] = await Promise.all([
-      detectDistress(transcribedText),
-      synthesizeSpeech(responseText)
-    ]);
+    const distressResult = await detectDistress(transcribedText);
+    const audioResponse = useClientTts ? null : await synthesizeSpeech(responseText);
 
     if (distressResult.isDistressed) {
       const alertId = uuidv4();
@@ -132,7 +131,13 @@ export const handler = async (event) => {
       distressDetected: distressResult.isDistressed
     });
 
-    return respond(200, { transcribedText, response: responseText, audioResponse, isDistressed: distressResult.isDistressed, distressSeverity: distressResult.severity });
+    return respond(200, {
+      transcribedText,
+      response: responseText,
+      audioResponse,
+      isDistressed: distressResult.isDistressed,
+      distressSeverity: distressResult.severity
+    });
   } catch (err) {
     console.error("processVoiceInput error:", err);
     return respond(500, { error: err.message });

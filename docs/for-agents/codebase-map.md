@@ -16,7 +16,10 @@
 |------|--------|
 | `shared/bedrock.js` | Done |
 | `shared/dynamodb.js` | Done |
-| `shared/polly.js` | Done |
+| `shared/polly.js` | Lambda TTS (server) |
+| `lib/piper.js` | Browser → Piper HTTP |
+| `lib/tts.js` | Client speak (Piper or API mp3) |
+| `services/piper-tts/` | Local Piper Docker (not Lambda) |
 | `shared/transcribe.js` | Done |
 | `shared/auth.js` | **Not built** (post-hackathon) |
 | Auth handlers (4) | Done |

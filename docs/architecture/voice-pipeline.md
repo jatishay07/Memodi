@@ -127,13 +127,12 @@ If `caregiverId` is null (no linked caregiver), alert is still saved; SNS may st
 
 ## Step 5 — Text-to-speech
 
-**Module:** `lambda/shared/polly.js`
+| Mode | Where | Module |
+|------|-------|--------|
+| Polly (default) | Lambda | `lambda/shared/polly.js` — Ruth neural, mp3 base64 in `/voice` response |
+| Piper | Browser only | `web/lib/piper.js` → `services/piper-tts` Docker; `/voice` with `clientTts: true` skips Polly |
 
-- Voice: **Ruth**
-- Engine: **neural**
-- Format: **mp3** → base64 in response
-
-Runs in `Promise.all` with distress detection.
+Distress detection runs before TTS. Piper is not invoked from Lambda.
 
 ## Step 6 — Persist interaction
 
@@ -153,7 +152,7 @@ Runs in `Promise.all` with distress detection.
 - `getUserMedia` for microphone
 - `MediaRecorder` with `audio/webm;codecs=opus` when supported
 - Tap orb: start → tap again: stop → base64 → `sendVoiceInput(patientId, base64)`
-- Playback: `data:audio/mpeg;base64,{audioResponse}`
+- Playback: Polly mp3 from API, or Piper wav via `web/lib/tts.js` when `NEXT_PUBLIC_TTS_PROVIDER=piper`
 
 ## Proactive messages (related)
 

@@ -74,7 +74,9 @@ Preferences and DOB are not required at signup; defaults applied server-side.
 
 **Body:** `{ "patientId", "audioBase64" }` (webm)
 
-**200:** `{ "transcribedText", "response", "audioResponse", "isDistressed", "distressSeverity" }`
+**Body:** `{ "patientId", "audioBase64", "clientTts"?: true }` — set `clientTts` when the browser uses Piper (no server TTS).
+
+**200:** `{ "transcribedText", "response", "audioResponse", "isDistressed", "distressSeverity" }` — `audioResponse` is null when `clientTts` is true.
 
 **Errors:** 400, 404, 500
 

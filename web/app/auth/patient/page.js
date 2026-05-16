@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../lib/auth';
-import { registerPatient, loginPatient } from '../../../lib/api';
+import { isLocalApi, registerPatient, loginPatient } from '../../../lib/api';
 
 const TIMEZONES = [
   'America/New_York', 'America/Chicago', 'America/Denver',
@@ -156,6 +156,24 @@ export default function PatientAuthPage() {
               {loading ? 'Signing in…' : 'Sign In'}
             </button>
           </form>
+        )}
+
+        {isLocalApi() && (
+          <button
+            type="button"
+            onClick={() => {
+              login({
+                token: 'dev-patient-demo',
+                patientId: 'patient-demo',
+                role: 'patient',
+                name: 'Alex',
+              });
+              router.replace('/patient');
+            }}
+            className="w-full py-3 rounded-xl border border-amber/40 text-amber text-sm font-medium hover:bg-amber/10 transition-all mt-4"
+          >
+            Try demo — no signup
+          </button>
         )}
 
         <p className="text-center text-gray-500 text-xs mt-6">

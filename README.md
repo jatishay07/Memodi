@@ -28,10 +28,10 @@ export JWT_SECRET="..."
 export SNS_CAREGIVER_TOPIC_ARN="..."
 npm run deploy
 
-# Frontend
-cd web && npm install
-# web/.env.local → NEXT_PUBLIC_API_BASE_URL
-npm run dev
+# Piper + local API (no AWS required for demo)
+npm run piper:setup   # once
+npm run dev           # Piper :59125 + Next.js :3000
+# Open http://localhost:3000/auth/patient → "Try demo" → tap orb to speak
 ```
 
 See [docs/for-humans/operations.md](docs/for-humans/operations.md).

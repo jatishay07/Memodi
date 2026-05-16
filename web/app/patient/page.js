@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import Orb from '../../components/Orb';
 import { useAuth } from '../../lib/auth';
 import { getPatient, sendVoiceInput } from '../../lib/api';
-import { requestAudioPermission, startRecording, stopRecordingAndGetBase64, playAudioBase64 } from '../../lib/audio';
+import { requestAudioPermission, startRecording, stopRecordingAndGetBase64 } from '../../lib/audio';
+import { speakResponse, usesClientPiper } from '../../lib/tts';
+import { checkPiperHealth } from '../../lib/piper';
 
 function greeting(name) {
   const h = new Date().getHours();
@@ -45,6 +47,15 @@ export default function PatientPage() {
       .catch(() => setPatient({ name: user.name || 'Friend', nickname: user.name?.split(' ')[0] || 'Friend' }));
 
     requestAudioPermission();
+
+    if (usesClientPiper()) {
+      checkPiperHealth().then((ok) => {
+        if (!ok) setError('Piper is not running. In the project root run: npm run piper:up');
+      }).catch(() => {
+        setError('Piper is not running. In the project root run: npm run piper:up');
+      });
+    }
+
     const t = setInterval(() => setClock(formatClock()), 60000);
     return () => clearInterval(t);
   }, [ready, user]);
@@ -80,12 +91,12 @@ export default function PatientPage() {
       setShowResponse(true);
 
       if (audioRef.current) audioRef.current.pause();
-      const audio = await playAudioBase64(result.audioResponse);
+      const audio = await speakResponse(result.response, result.audioResponse);
       audioRef.current = audio;
       audio.onended = () => setOrbState('idle');
     } catch (err) {
       console.error(err);
-      setError('Something went wrong. Try again.');
+      setError(err.message || 'Something went wrong. Try again.');
       setOrbState('idle');
     } finally {
       setIsProcessing(false);

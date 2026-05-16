@@ -45,8 +45,8 @@ export async function stopRecordingAndGetBase64() {
   });
 }
 
-export async function playAudioBase64(base64) {
-  const audio = new Audio(`data:audio/mpeg;base64,${base64}`);
+export async function playAudioBase64(base64, mimeType = 'audio/mpeg') {
+  const audio = new Audio(`data:${mimeType};base64,${base64}`);
   await audio.play();
   return audio;
 }

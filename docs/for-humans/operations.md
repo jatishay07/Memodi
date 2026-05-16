@@ -39,6 +39,42 @@ export SNS_CAREGIVER_TOPIC_ARN="arn:aws:sns:us-east-1:ACCOUNT:memodi-caregiver-a
 NEXT_PUBLIC_API_BASE_URL=https://xxxxxxxx.execute-api.us-east-1.amazonaws.com
 ```
 
+## Text-to-speech (Piper vs Polly)
+
+| Layer | Default | With Piper |
+|-------|---------|------------|
+| Patient voice replies | Lambda → **Polly** (mp3 in API) | Browser → **Piper** (local Python service); Lambda returns text only |
+| Scheduled / photo flows | Lambda → Polly | Unchanged (server-side Polly) |
+
+**Piper runs only in the browser** — not in Lambda. See [rhasspy/piper](https://github.com/rhasspy/piper) (archived; active fork: [OHF-Voice/piper1-gpl](https://github.com/OHF-Voice/piper1-gpl)).
+
+1. One-time setup (Python 3.9+, no Docker required):
+
+```bash
+npm run piper:setup
+```
+
+2. Start Piper + frontend together:
+
+```bash
+npm run dev
+```
+
+Or two terminals: `npm run piper:up` and `cd web && npm run dev`.
+
+Verify: `curl http://127.0.0.1:59125/health`
+
+3. In `web/.env.local`:
+
+```
+NEXT_PUBLIC_TTS_PROVIDER=piper
+NEXT_PUBLIC_PIPER_TTS_URL=http://127.0.0.1:59125
+```
+
+4. Redeploy Lambda once so `/voice` accepts `clientTts` (if not already deployed). The patient orb calls Piper directly; `/voice` sends `clientTts: true` so Lambda skips Polly.
+
+Stop Piper: kill the `piper:up` terminal, or `npm run piper:down` if you used Docker (`piper:up:docker`).
+
 ## Deploy backend
 
 Single stage, `us-east-1`:
