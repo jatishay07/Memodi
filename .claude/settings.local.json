@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:api.anthropic.com)",
+      "Bash(mkdir -p design_extracted_dir)",
+      "Bash(tar -xf design_extracted -C design_extracted_dir)",
+      "Bash(npm run *)",
+      "PowerShell(Get-ChildItem *)",
+      "Bash(npm install *)",
+      "Bash(npx next *)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(netstat -ano)",
+      "Bash(taskkill *)",
+      "PowerShell(Stop-Process *)"
+    ]
+  }
+}

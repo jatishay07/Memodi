@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Memodi — Ambient Backgrounds</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    width: 700px; height: 220px;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    font-family: var(--font-body);
+    color: var(--foreground);
+    background: var(--gradient-page);
+    position: relative;
+  }
+  .blob {
+    position: absolute; width: 360px; height: 360px; border-radius: 999px;
+    filter: blur(100px); opacity: 0.32; pointer-events: none;
+    animation: drift 18s ease-in-out infinite;
+  }
+  .b1 { background: radial-gradient(circle, #FC8A2D, transparent); top: -120px; left: -60px; }
+  .b2 { background: radial-gradient(circle, #DC4F7C, transparent); bottom: -120px; right: -60px; animation-delay: -6s; }
+  .b3 { background: radial-gradient(circle, #FCE9AB, transparent); top: 30px; right: 200px; animation-delay: -12s; }
+  @keyframes drift {
+    0%,100% { transform: translate(0,0); }
+    33% { transform: translate(30px, 22px); }
+    66% { transform: translate(-22px, 14px); }
+  }
+  .particles { position: absolute; inset: 0; }
+  .p {
+    position: absolute; width: 4px; height: 4px; border-radius: 999px;
+    background: linear-gradient(135deg, rgba(220,79,124,0.7), rgba(252,138,45,0.7));
+    animation: float 5s ease-in-out infinite;
+  }
+  @keyframes float { 0%,100%{transform: translateY(0); opacity:.25;} 50%{transform: translateY(-30px); opacity:.65;} }
+  .copy { position: relative; z-index: 2; padding: 28px 32px; }
+  .meta { font-size: 11px; color: var(--muted-foreground); letter-spacing: 0.1em; text-transform: uppercase; }
+  .head { font-family: var(--font-serif); font-size: 32px; font-weight: 400; margin-top: 8px; }
+  .desc { color: var(--muted-foreground); font-size: 14px; max-width: 420px; margin-top: 4px; }
+</style>
+</head>
+<body>
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+  <div class="particles">
+    <div class="p" style="top:18%; left:12%;"></div>
+    <div class="p" style="top:38%; left:42%; animation-delay:-1s;"></div>
+    <div class="p" style="top:64%; left:24%; animation-delay:-2s;"></div>
+    <div class="p" style="top:28%; left:72%; animation-delay:-1.5s;"></div>
+    <div class="p" style="top:78%; left:62%; animation-delay:-3s;"></div>
+    <div class="p" style="top:48%; left:88%; animation-delay:-2.5s;"></div>
+    <div class="p" style="top:22%; left:54%; animation-delay:-0.5s;"></div>
+    <div class="p" style="top:70%; left:84%; animation-delay:-3.5s;"></div>
+  </div>
+  <div class="copy">
+    <div class="meta">Backgrounds · gradient page + blobs + particles</div>
+    <div class="head">A peaceful digital sanctuary</div>
+    <div class="desc">Cream gradient base · 2 drifting radial blobs at 32% opacity, 100px blur · 8–12 floating warm specks. Never sit still.</div>
+  </div>
+</body>
+</html>

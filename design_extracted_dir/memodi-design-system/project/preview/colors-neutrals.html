@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Memodi — Neutrals & Ink</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    width: 700px; height: 200px;
+    background: var(--gradient-page);
+    padding: 24px 32px;
+    box-sizing: border-box;
+    font-family: var(--font-body);
+    color: var(--foreground);
+  }
+  .row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; height: 100%; }
+  .sw {
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 12px 14px;
+    font-size: 11px;
+    line-height: 1.3;
+    border: 1px solid var(--border);
+  }
+  .sw .name { font-family: var(--font-serif); font-size: 15px; font-weight: 500; }
+  .sw .hex  { opacity: 0.75; font-weight: 600; letter-spacing: 0.04em; margin-top: 2px; }
+  .light { color: #2d2d2d; }
+  .dark  { color: #fff; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="sw light" style="background:#FFFBF7">
+      <div class="name">Warm White</div><div class="hex">#FFFBF7</div>
+    </div>
+    <div class="sw light" style="background:#FFF9F0">
+      <div class="name">Cream</div><div class="hex">#FFF9F0</div>
+    </div>
+    <div class="sw light" style="background:#F5EFE7">
+      <div class="name">Muted</div><div class="hex">#F5EFE7</div>
+    </div>
+    <div class="sw light" style="background:#E5D5C5">
+      <div class="name">Switch Bg</div><div class="hex">#E5D5C5</div>
+    </div>
+    <div class="sw dark" style="background:#6B6B6B">
+      <div class="name">Ink Soft</div><div class="hex">#6B6B6B</div>
+    </div>
+    <div class="sw dark" style="background:#2D2D2D">
+      <div class="name">Ink</div><div class="hex">#2D2D2D</div>
+    </div>
+  </div>
+</body>
+</html>

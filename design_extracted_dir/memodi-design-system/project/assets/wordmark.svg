@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 160" width="600" height="160" role="img" aria-label="Memodi">
+  <defs>
+    <linearGradient id="memodi-warm" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#DC4F7C"></stop>
+      <stop offset="50%" stop-color="#FC8A2D"></stop>
+      <stop offset="100%" stop-color="#DC4F7C"></stop>
+    </linearGradient>
+  </defs>
+  <text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="&#39;Crimson Pro&#39;, Georgia, serif" font-size="110" font-weight="400" letter-spacing="-2" fill="url(#memodi-warm)">Memodi</text>
+</svg>

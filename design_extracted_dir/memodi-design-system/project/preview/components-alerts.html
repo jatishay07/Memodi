@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Memodi — Alert Card</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="https://unpkg.com/lucide@0.487.0/dist/umd/lucide.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    width: 700px; height: 320px;
+    background: var(--gradient-page);
+    padding: 22px 24px;
+    box-sizing: border-box;
+    font-family: var(--font-body);
+    color: var(--foreground);
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .alert {
+    border-radius: 24px;
+    padding: 16px 22px;
+    backdrop-filter: blur(8px);
+    border: 2px solid;
+    display: flex; align-items: center; gap: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .alert > * { position: relative; z-index: 1; }
+  .icon {
+    width: 52px; height: 52px; border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center; color: #fff;
+    flex-shrink: 0;
+  }
+  .body { flex: 1; }
+  .title { font-family: var(--font-serif); font-size: 21px; font-weight: 500; margin: 0 0 4px; }
+  .meta  { color: var(--muted-foreground); font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+  .badge {
+    align-self: center;
+    padding: 4px 12px; border-radius: 999px; font-size: 11px;
+    font-weight: 700; letter-spacing: 0.08em; background: rgba(255,255,255,0.55);
+  }
+  .a-mild   { background: linear-gradient(135deg, rgba(158,152,32,0.16), rgba(252,233,171,0.18)); border-color: rgba(158,152,32,0.32); }
+  .a-mild   .icon { background: linear-gradient(135deg,#9E9820, #b6b04a); }
+  .a-mild   .title { color: #6e6915; }
+  .a-medium { background: linear-gradient(135deg, rgba(252,138,45,0.20), rgba(252,233,171,0.18)); border-color: rgba(252,138,45,0.40); }
+  .a-medium .icon { background: linear-gradient(135deg,#FC8A2D, #f0a155); }
+  .a-medium .title { color: #b8500e; }
+  .a-severe { background: linear-gradient(135deg, rgba(196,43,52,0.20), rgba(220,79,124,0.16)); border-color: rgba(196,43,52,0.50); }
+  .a-severe::before {
+    content:""; position: absolute; inset: 0;
+    background: linear-gradient(90deg, rgba(196,43,52,0.12), transparent);
+    animation: sweep 2s ease-in-out infinite;
+    z-index: 0;
+  }
+  @keyframes sweep { 0%,100%{opacity:0.4;} 50%{opacity:0.85;} }
+  .a-severe .icon { background: linear-gradient(135deg,#C42B34, #DC4F7C); }
+  .a-severe .title { color: #8a1117; }
+</style>
+</head>
+<body>
+  <div class="alert a-mild">
+    <div class="icon"><i data-lucide="pill" style="width:24px;height:24px"></i></div>
+    <div class="body">
+      <div class="title">Medication reminder acknowledged</div>
+      <div class="meta"><i data-lucide="clock" style="width:14px;height:14px"></i>4 hours ago</div>
+    </div>
+    <span class="badge" style="color:#9E9820">MILD</span>
+  </div>
+  <div class="alert a-medium">
+    <div class="icon"><i data-lucide="brain" style="width:24px;height:24px"></i></div>
+    <div class="body">
+      <div class="title">Confusion spike detected</div>
+      <div class="meta"><i data-lucide="clock" style="width:14px;height:14px"></i>6 hours ago</div>
+    </div>
+    <span class="badge" style="color:#FC8A2D">MEDIUM</span>
+  </div>
+  <div class="alert a-severe">
+    <div class="icon"><i data-lucide="alert-triangle" style="width:24px;height:24px"></i></div>
+    <div class="body">
+      <div class="title">Emergency assistance requested</div>
+      <div class="meta"><i data-lucide="clock" style="width:14px;height:14px"></i>Yesterday, 8:30 PM</div>
+    </div>
+    <span class="badge" style="color:#C42B34">SEVERE</span>
+  </div>
+  <script>lucide.createIcons();</script>
+</body>
+</html>
