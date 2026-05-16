@@ -2,10 +2,27 @@ service: memodi
 
 frameworkVersion: '3'
 
+package:
+  patterns:
+    - '!**'
+    - 'lambda/**'
+    - '!lambda/node_modules/.cache/**'
+
 provider:
   name: aws
   runtime: nodejs18.x
   region: us-east-1
+  httpApi:
+    cors:
+      allowedOrigins:
+        - '*'
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+      allowedMethods:
+        - GET
+        - POST
+        - OPTIONS
   environment:
     DYNAMODB_PATIENTS_TABLE: memodi-patients
     DYNAMODB_INTERACTIONS_TABLE: memodi-interactions
@@ -16,6 +33,8 @@ provider:
     BEDROCK_MODEL_ID: anthropic.claude-sonnet-4-20250514
     SNS_CAREGIVER_TOPIC_ARN: ${env:SNS_CAREGIVER_TOPIC_ARN}
     JWT_SECRET: ${env:JWT_SECRET}
+    COGNITO_USER_POOL_ID: !Ref CognitoUserPool
+    COGNITO_CLIENT_ID: !Ref CognitoUserPoolClient
   iam:
     role:
       statements:
@@ -57,6 +76,14 @@ provider:
           Action:
             - sns:Publish
           Resource: '*'
+        - Effect: Allow
+          Action:
+            - cognito-idp:SignUp
+            - cognito-idp:ConfirmSignUp
+            - cognito-idp:InitiateAuth
+            - cognito-idp:ResendConfirmationCode
+            - cognito-idp:AdminGetUser
+          Resource: !GetAtt CognitoUserPool.Arn
 
 functions:
   # Auth
@@ -83,6 +110,12 @@ functions:
     events:
       - httpApi:
           path: /auth/caregiver/login
+          method: POST
+  verifyEmail:
+    handler: lambda/verifyEmail/index.handler
+    events:
+      - httpApi:
+          path: /auth/verify
           method: POST
 
   # Core
@@ -139,6 +172,34 @@ functions:
 
 resources:
   Resources:
+    CognitoUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: memodi-users
+        UsernameAttributes:
+          - email
+        AutoVerifiedAttributes:
+          - email
+        Policies:
+          PasswordPolicy:
+            MinimumLength: 8
+            RequireUppercase: false
+            RequireLowercase: false
+            RequireNumbers: false
+            RequireSymbols: false
+        EmailVerificationSubject: "Verify your Memodi account"
+        EmailVerificationMessage: "Your Memodi verification code is {####}"
+
+    CognitoUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: memodi-client
+        UserPoolId: !Ref CognitoUserPool
+        GenerateSecret: false
+        ExplicitAuthFlows:
+          - ALLOW_USER_PASSWORD_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
+
     PatientsTable:
       Type: AWS::DynamoDB::Table
       Properties:

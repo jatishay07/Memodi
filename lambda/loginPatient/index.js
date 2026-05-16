@@ -1,12 +1,12 @@
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { getPatientByEmail } from "../shared/dynamodb.js";
+import { authenticateUser } from "../shared/cognito.js";
 
 const CORS = {
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Content-Type,Authorization",
-  "Access-Control-Allow-Methods": "POST,OPTIONS"
+  "Access-Control-Allow-Methods": "POST,OPTIONS",
 };
 
 function respond(status, body) {
@@ -25,11 +25,20 @@ export const handler = async (event) => {
   const { email, password } = body;
   if (!email || !password) return respond(400, { error: "email and password are required" });
 
-  const patient = await getPatientByEmail(email);
-  if (!patient) return respond(401, { error: "Invalid credentials" });
+  try {
+    await authenticateUser(email, password);
+  } catch (err) {
+    if (err.name === "UserNotConfirmedException") {
+      return respond(403, { error: "Please verify your email before signing in.", code: "EMAIL_NOT_VERIFIED" });
+    }
+    if (err.name === "NotAuthorizedException" || err.name === "UserNotFoundException") {
+      return respond(401, { error: "Invalid email or password" });
+    }
+    return respond(500, { error: "Login failed. Please try again." });
+  }
 
-  const valid = await bcrypt.compare(password, patient.hashedPassword);
-  if (!valid) return respond(401, { error: "Invalid credentials" });
+  const patient = await getPatientByEmail(email);
+  if (!patient) return respond(404, { error: "Account not found" });
 
   const token = jwt.sign(
     { sub: patient.patientId, role: "patient", patientId: patient.patientId },
