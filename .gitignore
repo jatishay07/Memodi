@@ -1,6 +1,9 @@
 node_modules/
 .env
 .env.local
+services/*/.venv/
+services/piper-tts/voices/
+web/.env.local
 *.mp3
 *.wav
 dist/
