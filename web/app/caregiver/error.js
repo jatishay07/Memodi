@@ -2,12 +2,25 @@
 
 export default function CaregiverError({ error, reset }) {
   return (
-    <div className="min-h-screen bg-navy flex flex-col items-center justify-center px-6 text-center">
-      <p className="text-pink text-lg font-semibold mb-2">Something went wrong</p>
-      <p className="text-gray-400 text-sm mb-6">{error?.message || 'Unknown error'}</p>
+    <div style={{
+      minHeight: '100vh', display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      padding: 24, textAlign: 'center',
+    }}>
+      <p style={{ fontFamily: 'var(--font-serif)', fontSize: 28, color: '#C42B34', fontWeight: 400, margin: '0 0 8px' }}>
+        Something went wrong.
+      </p>
+      <p style={{ fontSize: 16, color: '#9C9C9C', margin: '0 0 28px' }}>
+        {error?.message || 'Let me try that again.'}
+      </p>
       <button
         onClick={reset}
-        className="px-6 py-2 rounded-xl bg-amber text-navy font-semibold text-sm"
+        style={{
+          padding: '13px 32px', borderRadius: 999, border: 0,
+          background: '#FC8A2D', color: '#fff',
+          fontFamily: 'var(--font-sans)', fontSize: 16, fontWeight: 600,
+          cursor: 'pointer', boxShadow: '0 10px 28px rgba(252,138,45,0.30)',
+        }}
       >
         Try again
       </button>

@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Memodi orb mark">
+  <defs>
+    
+    <radialGradient id="m-rose" cx="35%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#DC4F7C" stop-opacity="0.95"></stop>
+      <stop offset="60%" stop-color="#DC4F7C" stop-opacity="0.45"></stop>
+      <stop offset="100%" stop-color="#DC4F7C" stop-opacity="0"></stop>
+    </radialGradient>
+    <radialGradient id="m-orange" cx="70%" cy="35%" r="55%">
+      <stop offset="0%" stop-color="#FC8A2D" stop-opacity="0.95"></stop>
+      <stop offset="60%" stop-color="#FC8A2D" stop-opacity="0.40"></stop>
+      <stop offset="100%" stop-color="#FC8A2D" stop-opacity="0"></stop>
+    </radialGradient>
+    <radialGradient id="m-olive" cx="68%" cy="78%" r="55%">
+      <stop offset="0%" stop-color="#9E9820" stop-opacity="0.85"></stop>
+      <stop offset="55%" stop-color="#9E9820" stop-opacity="0.30"></stop>
+      <stop offset="100%" stop-color="#9E9820" stop-opacity="0"></stop>
+    </radialGradient>
+    <radialGradient id="m-jam" cx="28%" cy="78%" r="55%">
+      <stop offset="0%" stop-color="#C42B34" stop-opacity="0.80"></stop>
+      <stop offset="55%" stop-color="#C42B34" stop-opacity="0.20"></stop>
+      <stop offset="100%" stop-color="#C42B34" stop-opacity="0"></stop>
+    </radialGradient>
+    <radialGradient id="m-custard" cx="50%" cy="55%" r="40%">
+      <stop offset="0%" stop-color="#FCE9AB" stop-opacity="0.55"></stop>
+      <stop offset="100%" stop-color="#FCE9AB" stop-opacity="0"></stop>
+    </radialGradient>
+    <radialGradient id="m-shine" cx="32%" cy="28%" r="35%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.75"></stop>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"></stop>
+    </radialGradient>
+    <radialGradient id="m-rim" cx="50%" cy="50%" r="50%">
+      <stop offset="80%" stop-color="#000000" stop-opacity="0"></stop>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.22"></stop>
+    </radialGradient>
+    <clipPath id="m-clip"><circle cx="100" cy="100" r="92"></circle></clipPath>
+  </defs>
+
+  <g clip-path="url(#m-clip)">
+    <circle cx="100" cy="100" r="92" fill="#FCE9AB"></circle>
+    <circle cx="100" cy="100" r="92" fill="url(#m-rose)"></circle>
+    <circle cx="100" cy="100" r="92" fill="url(#m-orange)"></circle>
+    <circle cx="100" cy="100" r="92" fill="url(#m-olive)"></circle>
+    <circle cx="100" cy="100" r="92" fill="url(#m-jam)"></circle>
+    <circle cx="100" cy="100" r="92" fill="url(#m-custard)"></circle>
+    <circle cx="100" cy="100" r="92" fill="url(#m-shine)"></circle>
+    <circle cx="100" cy="100" r="92" fill="url(#m-rim)"></circle>
+  </g>
+</svg>

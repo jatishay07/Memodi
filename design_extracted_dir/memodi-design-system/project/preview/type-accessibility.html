@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Memodi — Accessibility text sizes</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    width: 700px; height: 280px;
+    background: var(--gradient-page);
+    padding: 28px 32px;
+    box-sizing: border-box;
+    font-family: var(--font-body);
+    color: var(--foreground);
+  }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; height: 100%; }
+  .card {
+    border-radius: var(--radius-xl);
+    background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(255,255,255,0.8);
+    padding: 18px 18px 16px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .badge {
+    align-self: flex-start;
+    background: #DC4F7C;
+    color: #fff;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-weight: 600;
+    font-family: var(--font-serif);
+    box-shadow: 0 2px 8px rgba(220,79,124,0.22);
+  }
+  .sample { line-height: 1.5; color: var(--foreground); }
+</style>
+</head>
+<body>
+  <div class="grid">
+    <div class="card">
+      <div class="badge" style="font-size:14px;">Aa</div>
+      <div class="sample" style="font-size:18px;">I'm here with you.</div>
+      <div style="font-size: 11px; color: var(--muted-foreground); letter-spacing: 0.08em;">DEFAULT · 1.0×</div>
+    </div>
+    <div class="card">
+      <div class="badge" style="font-size:16px;">Aa+</div>
+      <div class="sample" style="font-size:22px;">I'm here with you.</div>
+      <div style="font-size: 11px; color: var(--muted-foreground); letter-spacing: 0.08em;">LARGE · 1.20×</div>
+    </div>
+    <div class="card">
+      <div class="badge" style="font-size:18px;">Aa++</div>
+      <div class="sample" style="font-size:26px;">I'm here with you.</div>
+      <div style="font-size: 11px; color: var(--muted-foreground); letter-spacing: 0.08em;">XLARGE · 1.40×</div>
+    </div>
+  </div>
+</body>
+</html>

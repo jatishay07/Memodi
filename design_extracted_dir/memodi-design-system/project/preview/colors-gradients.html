@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Memodi — Light & Atmosphere</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    width: 700px; height: 340px;
+    box-sizing: border-box;
+    font-family: var(--font-body);
+    color: #4a3f33;
+    position: relative;
+    overflow: hidden;
+    /* Vintage paper base — warm linen, not bright white */
+    background:
+      radial-gradient(ellipse 70% 90% at 30% 25%, #fff4e1 0%, #fbe9cf 60%, #f3dcbb 100%);
+  }
+
+  /* Subtle paper grain via SVG noise */
+  .grain {
+    position: absolute; inset: 0; pointer-events: none;
+    opacity: 0.32;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.45 0 0 0 0 0.35 0 0 0 0.55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/></svg>");
+  }
+
+  /* Soft warm vignette */
+  .vignette {
+    position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 90% 100% at 50% 50%, transparent 50%, rgba(120, 85, 50, 0.16) 100%);
+  }
+
+  /* === Floating atmospheres — asymmetric, no boxes === */
+  .glow {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  /* Sunset — peach ceramic, large, top-left bleeding off edge */
+  .glow.sunset {
+    width: 320px; height: 320px;
+    left: -90px; top: -110px;
+    background: radial-gradient(circle at 50% 50%,
+      rgba(252, 138, 45, 0.55) 0%,
+      rgba(220, 79, 124, 0.32) 35%,
+      rgba(252, 233, 171, 0.18) 60%,
+      transparent 75%);
+    filter: blur(20px);
+    mix-blend-mode: multiply;
+  }
+
+  /* Dawn — small bedside-lamp bloom, mid-right */
+  .glow.dawn {
+    width: 220px; height: 220px;
+    right: 20px; top: 30px;
+    background: radial-gradient(circle at 45% 40%,
+      rgba(220, 79, 124, 0.40) 0%,
+      rgba(252, 138, 45, 0.22) 50%,
+      transparent 75%);
+    filter: blur(28px);
+    mix-blend-mode: multiply;
+  }
+
+  /* Meadow — olive haze, lower-left */
+  .glow.meadow {
+    width: 260px; height: 260px;
+    left: 80px; bottom: -80px;
+    background: radial-gradient(circle at 50% 50%,
+      rgba(158, 152, 32, 0.32) 0%,
+      rgba(158, 152, 32, 0.14) 45%,
+      transparent 70%);
+    filter: blur(36px);
+    mix-blend-mode: multiply;
+  }
+
+  /* Warmth — wide vanilla wash, bottom-right */
+  .glow.warmth {
+    width: 360px; height: 220px;
+    right: -60px; bottom: -40px;
+    background: radial-gradient(ellipse at 40% 50%,
+      rgba(252, 233, 171, 0.70) 0%,
+      rgba(252, 138, 45, 0.18) 50%,
+      transparent 78%);
+    filter: blur(24px);
+    mix-blend-mode: multiply;
+  }
+
+  /* Tiny floating motes */
+  .mote {
+    position: absolute; width: 3px; height: 3px;
+    border-radius: 50%;
+    background: rgba(220, 79, 124, 0.45);
+    filter: blur(0.6px);
+    box-shadow: 0 0 8px rgba(252, 138, 45, 0.4);
+  }
+
+  /* === Type & labels === */
+  .content {
+    position: relative; z-index: 2;
+    width: 100%; height: 100%;
+    padding: 30px 36px;
+    box-sizing: border-box;
+  }
+  .eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: rgba(74, 63, 51, 0.55);
+    margin-bottom: 8px;
+  }
+  .quote {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 22px;
+    line-height: 1.32;
+    font-weight: 400;
+    color: #5a4a38;
+    max-width: 270px;
+    margin: 0;
+    letter-spacing: 0.005em;
+  }
+  .quote em {
+    font-style: italic;
+    color: rgba(196, 80, 50, 0.85);
+  }
+
+  /* Labels for each atmosphere — written like nature notes, not chips */
+  .label {
+    position: absolute;
+    font-family: var(--font-serif);
+    font-style: italic;
+    color: rgba(90, 74, 56, 0.78);
+    letter-spacing: 0.02em;
+  }
+  .label .name {
+    display: block;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 500;
+    color: rgba(90, 60, 45, 0.92);
+    letter-spacing: 0.005em;
+  }
+  .label .note {
+    display: block;
+    font-size: 11px;
+    font-style: italic;
+    color: rgba(120, 95, 70, 0.70);
+    margin-top: 2px;
+    font-family: var(--font-body);
+    letter-spacing: 0.04em;
+  }
+  .label .hex {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--font-body);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    color: rgba(120, 95, 70, 0.55);
+    text-transform: uppercase;
+  }
+  .label .arc {
+    display: block;
+    width: 28px; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(120, 95, 70, 0.45), transparent);
+    margin: 6px 0 4px;
+  }
+
+  /* small specimen orb showing the gradient in its purest distilled form */
+  .specimen {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    position: absolute;
+    /* dimensional sphere — multiple stacked inset highlights + cast shadow */
+    box-shadow:
+      /* top specular highlight */
+      inset 0 8px 12px -2px rgba(255, 255, 255, 0.85),
+      inset 0 14px 22px -8px rgba(255, 255, 255, 0.55),
+      /* lower-right rim shadow */
+      inset 0 -14px 22px -4px rgba(80, 45, 25, 0.32),
+      inset -8px -10px 18px -8px rgba(80, 45, 25, 0.20),
+      /* contact shadow on the paper */
+      0 18px 24px -10px rgba(140, 80, 45, 0.32),
+      0 4px 6px -2px rgba(140, 80, 45, 0.18);
+  }
+  /* tiny specular dot — sells "ceramic" */
+  .specimen::after {
+    content: "";
+    position: absolute;
+    top: 14%; left: 28%;
+    width: 22%; height: 14%;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 70%);
+    filter: blur(1.5px);
+  }
+</style>
+</head>
+<body>
+
+  <!-- Atmospheres -->
+  <div class="glow sunset"></div>
+  <div class="glow dawn"></div>
+  <div class="glow meadow"></div>
+  <div class="glow warmth"></div>
+
+  <!-- Floating motes -->
+  <div class="mote" style="top: 18%; left: 38%;"></div>
+  <div class="mote" style="top: 62%; left: 48%; background: rgba(252,138,45,0.5);"></div>
+  <div class="mote" style="top: 28%; left: 72%; background: rgba(158,152,32,0.5);"></div>
+  <div class="mote" style="top: 74%; left: 78%;"></div>
+  <div class="mote" style="top: 45%; left: 22%; background: rgba(252,138,45,0.4);"></div>
+
+  <!-- Paper grain on top -->
+  <div class="grain"></div>
+  <div class="vignette"></div>
+
+  <!-- Content -->
+  <div class="content">
+    <div class="eyebrow">Light, not gradients</div>
+    <p class="quote">
+      Memodi's color lives the way <em>afternoon sun</em><br>lives on a kitchen table —<br>warm, soft, almost remembered.
+    </p>
+  </div>
+
+  <!-- Specimen orbs distilling each atmosphere -->
+  <!-- Top-right: Dawn -->
+  <div class="specimen" style="right: 220px; top: 36px;
+       background: radial-gradient(circle at 35% 30%, #ffe0d4 0%, #e29ba0 50%, #c87080 100%);"></div>
+  <div class="label" style="right: 24px; top: 40px; text-align: right;">
+    <span class="name">Dawn</span>
+    <span class="note">first light, bedside lamp</span>
+    <span class="arc" style="margin-left: auto;"></span>
+    <span class="hex">#DC4F7C &middot; #FC8A2D</span>
+  </div>
+
+  <!-- Mid-right: Sunset -->
+  <div class="specimen" style="right: 220px; top: 150px;
+       background: radial-gradient(circle at 35% 30%, #ffd4b0 0%, #f0996b 45%, #c66a55 100%);"></div>
+  <div class="label" style="right: 24px; top: 154px; text-align: right;">
+    <span class="name">Sunset</span>
+    <span class="note">peach ceramic, late light</span>
+    <span class="arc" style="margin-left: auto;"></span>
+    <span class="hex">#FC8A2D &middot; #DC4F7C</span>
+  </div>
+
+  <!-- Bottom-left: Meadow -->
+  <div class="specimen" style="left: 36px; bottom: 36px;
+       background: radial-gradient(circle at 35% 30%, #f4ddb0 0%, #c4ad60 50%, #8a8035 100%);"></div>
+  <div class="label" style="left: 106px; bottom: 38px;">
+    <span class="name">Meadow</span>
+    <span class="note">dried grass, slow morning</span>
+    <span class="arc"></span>
+    <span class="hex">#FC8A2D &middot; #9E9820</span>
+  </div>
+
+  <!-- Bottom-right: Warmth -->
+  <div class="specimen" style="right: 220px; bottom: 36px;
+       background: radial-gradient(circle at 35% 30%, #fff2cf 0%, #f3d99b 55%, #d9a36a 100%);"></div>
+  <div class="label" style="right: 24px; bottom: 40px; text-align: right;">
+    <span class="name">Warmth</span>
+    <span class="note">vintage paper, custard</span>
+    <span class="arc" style="margin-left: auto;"></span>
+    <span class="hex">#DC4F7C &middot; #FC8A2D &middot; #FCE9AB</span>
+  </div>
+
+</body>
+</html>

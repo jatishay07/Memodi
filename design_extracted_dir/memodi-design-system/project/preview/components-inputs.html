@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Memodi — Inputs & Fields</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<script src="https://unpkg.com/lucide@0.487.0/dist/umd/lucide.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; }
+  body {
+    width: 700px; height: 280px;
+    background: var(--gradient-page);
+    padding: 26px 30px;
+    box-sizing: border-box;
+    font-family: var(--font-body);
+    color: var(--foreground);
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .field { display:flex; flex-direction: column; gap: 6px; }
+  label { font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; }
+  input, textarea {
+    background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(255,255,255,0.8);
+    border-radius: 20px;
+    padding: 12px 18px;
+    font: inherit;
+    font-size: 16px;
+    color: var(--foreground);
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  input::placeholder, textarea::placeholder { color: var(--color-ink-faint); }
+  input:focus, textarea:focus {
+    border-color: var(--color-princeton-orange);
+    box-shadow: 0 0 0 4px rgba(252,138,45,0.18);
+  }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  textarea { resize: none; min-height: 60px; }
+  .pill-search {
+    background: rgba(255,255,255,0.7);
+    border-radius: 999px;
+    padding: 12px 22px;
+  }
+</style>
+</head>
+<body>
+  <input class="pill-search" placeholder="Search memories, tags, or people…">
+  <div class="grid">
+    <div class="field">
+      <label><i data-lucide="calendar" style="width:16px;height:16px"></i>Date</label>
+      <input type="text" value="2019-11-28">
+    </div>
+    <div class="field">
+      <label><i data-lucide="map-pin" style="width:16px;height:16px"></i>Location</label>
+      <input placeholder="Where was this?">
+    </div>
+  </div>
+  <div class="field">
+    <label><i data-lucide="tag" style="width:16px;height:16px"></i>Tags</label>
+    <input placeholder="garden, family, celebration">
+  </div>
+  <script>lucide.createIcons();</script>
+</body>
+</html>

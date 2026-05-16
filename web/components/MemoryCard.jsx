@@ -1,25 +1,61 @@
+'use client';
+
 export default function MemoryCard({ type, data }) {
+  const cardStyle = {
+    borderRadius: 20, overflow: 'hidden',
+    background: 'rgba(255,255,255,0.75)',
+    backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+    border: '2px solid rgba(255,255,255,0.90)',
+    boxShadow: '0 8px 24px rgba(45,45,45,0.08)',
+    marginBottom: 16,
+    padding: '18px 20px',
+    transition: 'transform .3s ease, box-shadow .3s ease',
+  };
+
   if (type === 'person') {
     return (
-      <div className="bg-navy-card border border-navy-border rounded-xl p-4">
-        <div className="flex items-start gap-3">
+      <div style={cardStyle}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
           {data.photoUrl ? (
-            <img src={data.photoUrl} alt={data.name} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
+            <img
+              src={data.photoUrl} alt={data.name}
+              style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+            />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-[#374151] flex items-center justify-center flex-shrink-0">
-              <span className="text-amber text-lg font-semibold">{data.name?.[0] ?? '?'}</span>
+            <div style={{
+              width: 52, height: 52, borderRadius: '50%', flexShrink: 0,
+              background: 'rgba(220,79,124,0.15)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <span style={{ fontFamily: 'var(--font-serif)', fontSize: 22, color: '#DC4F7C', fontWeight: 500 }}>
+                {data.name?.[0] ?? '?'}
+              </span>
             </div>
           )}
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-white font-semibold">{data.name}</span>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+              <span style={{ fontFamily: 'var(--font-serif)', fontSize: 20, fontWeight: 500, color: '#2D2D2D' }}>
+                {data.name}
+              </span>
               {data.isDeceased && (
-                <span className="text-xs text-gray-400 bg-[#374151] px-2 py-0.5 rounded">In memory</span>
+                <span style={{
+                  fontSize: 11, color: '#6B6B6B',
+                  background: 'rgba(0,0,0,0.07)', padding: '2px 8px', borderRadius: 999,
+                }}>
+                  In memory
+                </span>
               )}
             </div>
-            <p className="text-amber text-sm mt-0.5">{data.relationship}</p>
+            <p style={{ fontSize: 13, color: '#FC8A2D', fontWeight: 500, margin: '0 0 4px' }}>
+              {data.relationship}
+            </p>
             {data.story && (
-              <p className="text-gray-400 text-sm mt-1 line-clamp-2">{data.story}</p>
+              <p style={{
+                fontSize: 14, color: '#6B6B6B', lineHeight: 1.55, margin: 0,
+                display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+              }}>
+                {data.story}
+              </p>
             )}
           </div>
         </div>
@@ -29,11 +65,21 @@ export default function MemoryCard({ type, data }) {
 
   if (type === 'object') {
     return (
-      <div className="bg-navy-card border border-navy-border rounded-xl p-4 flex items-center gap-3">
-        <span className="text-2xl">📍</span>
-        <div>
-          <p className="text-white font-medium">{data.item}</p>
-          <p className="text-gray-400 text-sm">{data.location}</p>
+      <div style={cardStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{
+            width: 44, height: 44, borderRadius: 14,
+            background: 'rgba(252,138,45,0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <span style={{ color: '#FC8A2D', fontSize: 20 }}>⊙</span>
+          </div>
+          <div>
+            <p style={{ fontFamily: 'var(--font-serif)', fontSize: 18, fontWeight: 500, margin: '0 0 3px', color: '#2D2D2D' }}>
+              {data.item}
+            </p>
+            <p style={{ fontSize: 14, color: '#6B6B6B', margin: 0 }}>{data.location}</p>
+          </div>
         </div>
       </div>
     );
@@ -41,11 +87,21 @@ export default function MemoryCard({ type, data }) {
 
   if (type === 'medication') {
     return (
-      <div className="bg-navy-card border border-navy-border rounded-xl p-4 flex items-center gap-3">
-        <span className="text-2xl">💊</span>
-        <div>
-          <p className="text-white font-medium">{data.name}</p>
-          <p className="text-gray-400 text-sm">{data.time} — {data.location}</p>
+      <div style={cardStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{
+            width: 44, height: 44, borderRadius: 14,
+            background: 'rgba(158,152,32,0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <span style={{ color: '#9E9820', fontSize: 18 }}>+</span>
+          </div>
+          <div>
+            <p style={{ fontFamily: 'var(--font-serif)', fontSize: 18, fontWeight: 500, margin: '0 0 3px', color: '#2D2D2D' }}>
+              {data.name}
+            </p>
+            <p style={{ fontSize: 14, color: '#6B6B6B', margin: 0 }}>{data.time} — {data.location}</p>
+          </div>
         </div>
       </div>
     );
@@ -53,19 +109,29 @@ export default function MemoryCard({ type, data }) {
 
   if (type === 'event') {
     return (
-      <div className="bg-navy-card border border-navy-border rounded-xl p-4 flex items-center gap-3">
-        <span className="text-2xl">📅</span>
-        <div>
-          <p className="text-white font-medium">{data.description}</p>
-          <p className="text-gray-400 text-sm">{data.date}</p>
+      <div style={cardStyle}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{
+            width: 44, height: 44, borderRadius: 14,
+            background: 'rgba(220,79,124,0.12)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <span style={{ color: '#DC4F7C', fontSize: 18 }}>◷</span>
+          </div>
+          <div>
+            <p style={{ fontFamily: 'var(--font-serif)', fontSize: 18, fontWeight: 500, margin: '0 0 3px', color: '#2D2D2D' }}>
+              {data.description}
+            </p>
+            <p style={{ fontSize: 14, color: '#6B6B6B', margin: 0 }}>{data.date}</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-navy-card border border-navy-border rounded-xl p-4">
-      <p className="text-gray-300 text-sm leading-relaxed">
+    <div style={cardStyle}>
+      <p style={{ fontSize: 15, color: '#6B6B6B', lineHeight: 1.6, margin: 0 }}>
         {typeof data === 'string' ? data : JSON.stringify(data)}
       </p>
     </div>

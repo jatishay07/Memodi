@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Memodi — Patient UI Kit</title>
+<link rel="stylesheet" href="../../colors_and_type.css">
+<style>
+  html, body, #root { margin: 0; padding: 0; height: 100%; }
+  body { font-family: var(--font-body); color: var(--foreground); }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/lucide@0.487.0/dist/umd/lucide.min.js"></script>
+
+  <script type="text/babel" src="Ambient.jsx" data-presets="react"></script>
+  <script type="text/babel" src="AIOrb.jsx" data-presets="react"></script>
+  <script type="text/babel" src="PatientNav.jsx" data-presets="react"></script>
+  <script type="text/babel" src="MemodiMesh.jsx" data-presets="react"></script>
+  <script type="text/babel" src="Landing.jsx" data-presets="react"></script>
+  <script type="text/babel" src="PatientDashboard.jsx" data-presets="react"></script>
+  <script type="text/babel" src="MemoryLane.jsx" data-presets="react"></script>
+
+  <script type="text/babel" data-presets="react">
+    const PatientShell = () => {
+      const [screen, setScreen] = React.useState("landing"); // landing | dashboard | memory-lane
+
+      // re-render lucide on every screen change
+      React.useEffect(() => {
+        if (window.lucide) window.lucide.createIcons();
+      });
+
+      if (screen === "landing") {
+        return (
+          <Landing
+            onEnter={(role) => setScreen(role === "patient" ? "dashboard" : "dashboard")}
+          />
+        );
+      }
+
+      return (
+        <div data-screen-label={screen === "dashboard" ? "01 Dashboard" : "02 Memory Lane"}>
+          <PatientNav current={screen} onNavigate={setScreen} />
+          {screen === "dashboard" && <PatientDashboard />}
+          {screen === "memory-lane" && <MemoryLane />}
+          <button
+            onClick={() => setScreen("landing")}
+            style={{
+              position: "fixed", top: 24, right: 32, zIndex: 60,
+              padding: "10px 18px", borderRadius: 999,
+              border: "2px solid rgba(255,255,255,0.7)",
+              background: "rgba(255,255,255,0.5)",
+              backdropFilter: "blur(20px)",
+              color: "#6B6B6B", fontFamily: "var(--font-body)",
+              fontSize: 15, fontWeight: 500, cursor: "pointer",
+            }}
+          >
+            Sign out
+          </button>
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<PatientShell />);
+  </script>
+</body>
+</html>
