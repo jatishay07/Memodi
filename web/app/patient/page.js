@@ -25,15 +25,18 @@ export default function PatientPage() {
   const router = useRouter();
   const { user, ready } = useAuth();
 
+  const [mounted, setMounted] = useState(false);
   const [orbState, setOrbState] = useState('idle');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [patient, setPatient] = useState(null);
   const [response, setResponse] = useState('');
   const [showResponse, setShowResponse] = useState(false);
-  const [clock, setClock] = useState(formatClock());
+  const [clock, setClock] = useState(null);
   const [error, setError] = useState('');
   const audioRef = useRef(null);
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!ready) return;
@@ -45,6 +48,7 @@ export default function PatientPage() {
       .catch(() => setPatient({ name: user.name || 'Friend', nickname: user.name?.split(' ')[0] || 'Friend' }));
 
     requestAudioPermission();
+    setClock(formatClock());
     const t = setInterval(() => setClock(formatClock()), 60000);
     return () => clearInterval(t);
   }, [ready, user]);
@@ -92,7 +96,7 @@ export default function PatientPage() {
     }
   }
 
-  if (!ready) return null;
+  if (!mounted || !ready) return null;
 
   const name = patient?.nickname || patient?.name?.split(' ')[0] || user?.name?.split(' ')[0] || '…';
   const greet = greeting(name);
@@ -121,8 +125,8 @@ export default function PatientPage() {
       </div>
 
       <div className="text-center pb-4">
-        <p className="text-cream text-sm tracking-wide mb-1">{clock.day}</p>
-        <p className="text-cream text-4xl font-extralight tracking-widest">{clock.time}</p>
+        <p className="text-cream text-sm tracking-wide mb-1">{clock?.day}</p>
+        <p className="text-cream text-4xl font-extralight tracking-widest">{clock?.time}</p>
       </div>
     </div>
   );
