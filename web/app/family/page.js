@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import MemoryCard from '../../components/MemoryCard';
 import CaregiverNav from '../../components/CaregiverNav';
 import CaregiverAmbient from '../../components/CaregiverAmbient';
+import PatientNav from '../../components/PatientNav';
+import Ambient from '../../components/Ambient';
 import { useAuth } from '../../lib/auth';
 import { getPatient, uploadMemory } from '../../lib/api';
 
@@ -93,7 +95,27 @@ export default function FamilyPage() {
     } finally { setSaving(false); }
   }
 
-  function renderContent() {
+  function renderReadOnlyContent() {
+    if (!patient) return null;
+    const items = {
+      people:      (patient.familyMembers ?? []).map((p, i) => <MemoryCard key={i} type="person" data={p} />),
+      objects:     (patient.objects ?? []).map((o, i) => <MemoryCard key={i} type="object" data={o} />),
+      history:     (patient.lifeHistory ?? []).map((f, i) => <MemoryCard key={i} type="lifeHistory" data={f} />),
+      medications: (patient.medications ?? []).map((m, i) => <MemoryCard key={i} type="medication" data={m} />),
+      events:      (patient.upcomingEvents ?? []).map((e, i) => <MemoryCard key={i} type="event" data={e} />),
+    };
+    const cards = items[tab] ?? [];
+    if (cards.length === 0) {
+      return (
+        <div style={{ padding: '64px 0', textAlign: 'center' }}>
+          <p style={{ fontSize: 18, color: '#9C9C9C', margin: 0 }}>Nothing here yet.</p>
+        </div>
+      );
+    }
+    return cards;
+  }
+
+  function renderCaregiverContent() {
     if (!patient) return null;
     switch (tab) {
       case 'people':
@@ -122,6 +144,68 @@ export default function FamilyPage() {
 
   if (!ready) return null;
 
+  const isPatient = user?.role === 'patient';
+
+  /* ── Patient: read-only Memory Lane ── */
+  if (isPatient) {
+    return (
+      <div style={{
+        position: 'relative', minHeight: '100vh', overflow: 'hidden', paddingBottom: 64,
+        background: 'linear-gradient(135deg, #FFF9F0 0%, #FFFBF7 40%, rgba(252,233,171,0.10) 100%)',
+      }}>
+        <Ambient particleCount={8} />
+        <PatientNav onSignOut={logout} />
+
+        <div style={{ position: 'relative', zIndex: 1, padding: '120px 40px 0', maxWidth: 1280, margin: '0 auto' }}>
+          <div style={{ marginBottom: 32 }}>
+            <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 52, fontWeight: 400, margin: 0, letterSpacing: '-0.01em' }}>
+              Memory Lane
+            </h1>
+            <p style={{ fontSize: 18, color: '#6B6B6B', margin: '8px 0 0' }}>
+              {patient?.name ? `A window into ${patient.name}'s cherished memories` : 'Your cherished memories'}
+            </p>
+          </div>
+
+          {/* Category chips */}
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8, marginBottom: 28 }}>
+            {CATEGORIES.map(cat => {
+              const active = tab === cat.key;
+              return (
+                <button key={cat.key} onClick={() => setTab(cat.key)} style={{
+                  padding: '10px 22px', borderRadius: 999, border: 'none',
+                  background: active ? '#DC4F7C' : 'rgba(255,255,255,0.65)',
+                  color: active ? '#fff' : '#6B6B6B',
+                  fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500,
+                  cursor: 'pointer', whiteSpace: 'nowrap',
+                  boxShadow: active ? '0 8px 20px rgba(220,79,124,0.26)' : '0 2px 8px rgba(45,45,45,0.06)',
+                  backdropFilter: 'blur(10px)',
+                  transition: 'all .2s ease',
+                }}>
+                  {cat.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {loading ? (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: 80 }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: '50%',
+                border: '3px solid rgba(220,79,124,0.25)', borderTopColor: '#DC4F7C',
+                animation: 'orbSpin .8s linear infinite',
+              }} />
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {renderReadOnlyContent()}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Caregiver: full editable Memory Base ── */
   return (
     <div style={{ position: 'relative', minHeight: '100vh', paddingBottom: 64 }}>
       <CaregiverAmbient />
@@ -182,7 +266,7 @@ export default function FamilyPage() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {renderContent()}
+            {renderCaregiverContent()}
           </div>
         )}
       </div>
@@ -261,12 +345,7 @@ export default function FamilyPage() {
           )}
 
           <div style={{ display: 'flex', gap: 12 }}>
-            <button
-              onClick={() => { setModal(null); resetPerson(); }}
-              style={ghostBtn}
-            >
-              Cancel
-            </button>
+            <button onClick={() => { setModal(null); resetPerson(); }} style={ghostBtn}>Cancel</button>
             <button
               onClick={savePerson}
               disabled={!pName.trim() || saving}
