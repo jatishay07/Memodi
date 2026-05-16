@@ -1,0 +1,11 @@
+node_modules/
+.env
+.env.local
+*.mp3
+*.wav
+dist/
+.serverless/
+.expo/
+ios/
+android/
+.next/
