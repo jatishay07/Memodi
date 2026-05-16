@@ -44,7 +44,7 @@ export default function CaregiverAuthPage() {
     setLoading(true);
     try {
       const data = await loginCaregiver({ email, password });
-      login({ token: data.token, caregiverId: data.caregiverId, patientId: data.patientId, role: 'caregiver' });
+      login({ token: data.token, caregiverId: data.caregiverId, patientId: data.patientId, role: 'caregiver', name: data.name });
       router.replace('/caregiver');
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed. Please try again.');

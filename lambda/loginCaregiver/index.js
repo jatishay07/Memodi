@@ -40,7 +40,8 @@ export const handler = async (event) => {
   return respond(200, {
     token,
     caregiverId: caregiver.caregiverId,
-    patientId: caregiver.linkedPatientId,
-    role: "caregiver"
+    patientId: caregiver.linkedPatientId ?? null,
+    role: "caregiver",
+    name: caregiver.name ?? ""
   });
 };
