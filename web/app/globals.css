@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --orb-color: #F5A623;
+  --orb-glow: rgba(245, 166, 35, 0.4);
+}
+
+html, body {
+  background-color: #0A0E1A;
+  color: #F9FAFB;
+  height: 100%;
+}
+
+.orb-glow {
+  position: absolute;
+  inset: -40%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--orb-glow) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.orb-core {
+  border-radius: 50%;
+  background: var(--orb-color);
+  box-shadow: 0 0 60px 20px var(--orb-glow);
+  cursor: pointer;
+  position: relative;
+  transition: background 0.6s ease, box-shadow 0.6s ease;
+}
+
+.orb-core[data-state='idle'] {
+  --orb-color: #F5A623;
+  --orb-glow: rgba(245, 166, 35, 0.35);
+  animation: orb-breathe 3s ease-in-out infinite;
+}
+
+.orb-core[data-state='listening'] {
+  --orb-color: #F7C948;
+  --orb-glow: rgba(247, 201, 72, 0.5);
+  animation: orb-listen 0.6s ease-in-out infinite;
+}
+
+.orb-core[data-state='speaking'] {
+  --orb-color: #F5A623;
+  --orb-glow: rgba(245, 166, 35, 0.4);
+  animation: orb-speak 0.35s ease-in-out infinite;
+}
+
+.orb-core[data-state='distress'] {
+  --orb-color: #F4A0A0;
+  --orb-glow: rgba(244, 160, 160, 0.45);
+  animation: orb-distress 1s ease-in-out infinite;
+}
+
+.orb-core[data-state='morning'] {
+  --orb-color: #FFD580;
+  --orb-glow: rgba(255, 213, 128, 0.4);
+  animation: orb-morning 4s ease-in-out infinite;
+}
+
+@keyframes orb-breathe {
+  0%, 100% { transform: scale(1.0); opacity: 0.85; }
+  50%       { transform: scale(1.06); opacity: 1.0; }
+}
+
+@keyframes orb-listen {
+  0%, 100% { transform: scale(1.28); box-shadow: 0 0 60px 20px var(--orb-glow); }
+  50%       { transform: scale(1.35); box-shadow: 0 0 100px 40px var(--orb-glow); }
+}
+
+@keyframes orb-speak {
+  0%, 100% { transform: scale(1.05); }
+  50%       { transform: scale(1.15); }
+}
+
+@keyframes orb-distress {
+  0%, 100% { transform: scale(1.0); opacity: 1.0; }
+  50%       { transform: scale(1.08); opacity: 0.75; }
+}
+
+@keyframes orb-morning {
+  0%, 100% { transform: scale(1.0); opacity: 0.8; }
+  50%       { transform: scale(1.1); opacity: 1.0; }
+}
+
+.response-fade-in {
+  animation: fade-in 0.4s ease forwards;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #0A0E1A; }
+::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
