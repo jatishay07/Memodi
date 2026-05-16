@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
-import { getCaregiverByEmail, putCaregiver, getPatientByConnectionCode, updatePatientField } from "../shared/dynamodb.js";
+import { getCaregiverByEmail, putCaregiver } from "../shared/dynamodb.js";
 
 const CORS = {
   "Content-Type": "application/json",
@@ -23,16 +23,13 @@ export const handler = async (event) => {
   try { body = JSON.parse(event.body || "{}"); }
   catch { return respond(400, { error: "Invalid JSON" }); }
 
-  const { email, password, connectionCode } = body;
-  if (!email || !password || !connectionCode) {
-    return respond(400, { error: "email, password, and connectionCode are required" });
+  const { email, password, name, relationship } = body;
+  if (!email || !password || !name || !relationship) {
+    return respond(400, { error: "email, password, name, and relationship are required" });
   }
 
   const existing = await getCaregiverByEmail(email);
   if (existing) return respond(409, { error: "Email already registered" });
-
-  const patient = await getPatientByConnectionCode(connectionCode.trim().toUpperCase());
-  if (!patient) return respond(404, { error: "Invalid connection code" });
 
   const hashedPassword = await bcrypt.hash(password, 10);
   const caregiverId = `caregiver-${uuidv4()}`;
@@ -41,14 +38,14 @@ export const handler = async (event) => {
     caregiverId,
     email,
     hashedPassword,
-    linkedPatientId: patient.patientId,
+    name,
+    relationship,
+    linkedPatientId: null,
     createdAt: new Date().toISOString()
   });
 
-  await updatePatientField(patient.patientId, "caregiverId", caregiverId);
-
   const token = jwt.sign(
-    { sub: caregiverId, role: "caregiver", caregiverId, patientId: patient.patientId },
+    { sub: caregiverId, role: "caregiver", caregiverId, patientId: null },
     process.env.JWT_SECRET,
     { expiresIn: "30d" }
   );
@@ -56,8 +53,8 @@ export const handler = async (event) => {
   return respond(201, {
     token,
     caregiverId,
-    patientId: patient.patientId,
-    patientName: patient.name,
-    role: "caregiver"
+    patientId: null,
+    role: "caregiver",
+    name
   });
 };
