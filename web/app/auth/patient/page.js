@@ -5,11 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../lib/auth';
 import { registerPatient, loginPatient } from '../../../lib/api';
 
-const TIMEZONES = [
-  'America/New_York', 'America/Chicago', 'America/Denver',
-  'America/Los_Angeles', 'America/Phoenix', 'Pacific/Honolulu'
-];
-
 export default function PatientAuthPage() {
   const router = useRouter();
   const { login, user, ready } = useAuth();
@@ -24,10 +19,7 @@ export default function PatientAuthPage() {
   const [error, setError] = useState('');
   const [connectionCode, setConnectionCode] = useState('');
 
-  // Register fields
   const [name, setName] = useState('');
-  const [dob, setDob] = useState('');
-  const [timezone, setTimezone] = useState('America/New_York');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -36,7 +28,7 @@ export default function PatientAuthPage() {
     setError('');
     setLoading(true);
     try {
-      const data = await registerPatient({ name, dateOfBirth: dob, timezone, email, password });
+      const data = await registerPatient({ name, email, password });
       setConnectionCode(data.connectionCode);
       login({ token: data.token, patientId: data.patientId, role: 'patient', name: data.name });
     } catch (err) {
@@ -126,16 +118,6 @@ export default function PatientAuthPage() {
             <AuthInput placeholder="Full name *" value={name} onChange={setName} />
             <AuthInput placeholder="Email *" type="email" value={email} onChange={setEmail} />
             <AuthInput placeholder="Password *" type="password" value={password} onChange={setPassword} />
-            <AuthInput placeholder="Date of birth (YYYY-MM-DD)" value={dob} onChange={setDob} />
-            <select
-              value={timezone}
-              onChange={e => setTimezone(e.target.value)}
-              className="w-full bg-[#1F2937] rounded-xl px-4 py-3 text-white text-sm outline-none"
-            >
-              {TIMEZONES.map(tz => (
-                <option key={tz} value={tz}>{tz.replace('America/', '').replace('Pacific/', 'Pacific/')}</option>
-              ))}
-            </select>
             <button
               type="submit"
               disabled={loading || !name || !email || !password}

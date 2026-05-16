@@ -18,16 +18,17 @@ export default function CaregiverAuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const [name, setName] = useState('');
+  const [relationship, setRelationship] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [connectionCode, setConnectionCode] = useState('');
 
   async function handleRegister(e) {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const data = await registerCaregiver({ email, password, connectionCode: connectionCode.trim().toUpperCase() });
+      const data = await registerCaregiver({ name, relationship, email, password });
       login({ token: data.token, caregiverId: data.caregiverId, patientId: data.patientId, role: 'caregiver', patientName: data.patientName });
       router.replace('/caregiver');
     } catch (err) {
@@ -81,22 +82,16 @@ export default function CaregiverAuthPage() {
 
         {mode === 'register' ? (
           <form onSubmit={handleRegister} className="flex flex-col gap-3">
+            <AuthInput placeholder="Full name *" value={name} onChange={setName} />
+            <AuthInput placeholder="Relationship (e.g. Son, Daughter) *" value={relationship} onChange={setRelationship} />
             <AuthInput placeholder="Email *" type="email" value={email} onChange={setEmail} />
             <AuthInput placeholder="Password *" type="password" value={password} onChange={setPassword} />
-            <div>
-              <AuthInput
-                placeholder="Patient connection code *"
-                value={connectionCode}
-                onChange={v => setConnectionCode(v.toUpperCase())}
-              />
-              <p className="text-gray-500 text-xs mt-1 px-1">Ask the patient for their 8-character code</p>
-            </div>
             <button
               type="submit"
-              disabled={loading || !email || !password || !connectionCode}
+              disabled={loading || !name || !relationship || !email || !password}
               className="w-full py-3 rounded-xl bg-amber text-navy font-semibold text-sm disabled:opacity-40 hover:brightness-110 transition-all mt-2"
             >
-              {loading ? 'Linking account…' : 'Create Account & Link'}
+              {loading ? 'Creating account…' : 'Create Account'}
             </button>
           </form>
         ) : (
