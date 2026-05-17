@@ -41,7 +41,7 @@ Use `npm run deploy:dev` only if you intentionally want a `dev` stage in the sam
 | DynamoDB | GetItem, PutItem, UpdateItem, Query, Scan on `memodi-*` |
 | S3 | PutObject, GetObject on `memodi-*` |
 | Bedrock | InvokeModel |
-| Polly | SynthesizeSpeech |
+| Bedrock Knowledge Base / vector store | Retrieve / query operations when enabled |
 | Transcribe | StartTranscriptionJob, GetTranscriptionJob |
 | Rekognition | SearchFacesByImage, IndexFaces |
 | SNS | Publish |
@@ -65,6 +65,7 @@ Create once in AWS Console or CLI — **not** in `serverless.yml` for v1:
 | S3 `memodi-voice-recordings` | Transcribe input audio |
 | Rekognition collection `memodi-faces` | Face index + search |
 | SNS topic | Caregiver distress alerts; set ARN in deploy env |
+| Bedrock Knowledge Base or vector store | Semantic memory retrieval |
 
 ### CLI example
 
@@ -106,7 +107,13 @@ NEXT_PUBLIC_API_BASE_URL=https://xxxxxxxx.execute-api.us-east-1.amazonaws.com
 
 ## Bedrock
 
-Enable Claude Sonnet 4 model access in Bedrock console for `us-east-1`.
+Enable Claude Sonnet 4 and Amazon Titan Embeddings model access in Bedrock console for `us-east-1`.
+
+Claude is used for memory-aware reasoning and response generation. Titan Embeddings is used to index stored memories and embed patient queries for semantic retrieval.
+
+## Local voice output
+
+Piper TTS is a local service, not an AWS resource. It receives Claude's final text response and generates the audio voice the patient hears. Piper does not need IAM permissions and does not store or retrieve patient memories.
 
 ## Related docs
 

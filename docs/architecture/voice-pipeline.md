@@ -1,6 +1,6 @@
 # Voice Pipeline
 
-The core Memodi experience: patient taps the orb, speaks, and receives a warm spoken response grounded in their memory profile. Implemented in `lambda/processVoiceInput/index.js`.
+The core Memodi experience: patient taps the orb, speaks, and receives a warm spoken response grounded in their memory profile. The AI layer produces text; Piper TTS speaks that text locally.
 
 ## End-to-end flow
 
@@ -11,8 +11,10 @@ sequenceDiagram
   participant V as processVoiceInput
   participant S3 as S3 voice bucket
   participant T as Transcribe
-  participant B as Bedrock
-  participant Polly as Polly
+  participant C as Claude
+  participant E as Titan Embeddings
+  participant KB as Vector Store / KB
+  participant Piper as Piper TTS
   participant DDB as DynamoDB
   participant SNS as SNS
 
@@ -22,18 +24,21 @@ sequenceDiagram
   V->>S3: upload audio
   V->>T: start job + poll up to 48s
   T-->>V: transcript
-  V->>B: queryMemoryBank
-  V->>B: generateResponse
-  par Distress + TTS
-    V->>B: detectDistress
-    V->>Polly: synthesizeSpeech Ruth neural
+  V->>E: embed transcript
+  E-->>V: query vector
+  V->>KB: retrieve similar memories
+  KB-->>V: relevant memory snippets
+  V->>C: generateResponse with patient + memories
+  par Distress + local TTS
+    V->>C: detectDistress
+    V->>Piper: synthesize local audio
   end
   alt isDistressed
     V->>DDB: saveAlert
     V->>SNS: publish caregiver topic
   end
   V->>DDB: saveInteraction
-  V-->>P: text + audioResponse base64 mp3
+  V-->>P: text + audioResponse base64
 ```
 
 ## Request / response
@@ -75,34 +80,47 @@ sequenceDiagram
 - `FAILED` job status → 500 with Transcribe reason
 - Timeout after 48s → 500 `"Transcription timed out"`
 
-## Step 2 — Memory context (Bedrock)
+## Step 2 — Memory retrieval
 
-**Function:** `queryMemoryBank(patient, transcribedText)`
+Memodi should retrieve memories semantically rather than relying on exact keyword matches.
 
-Claude analyzes full patient profile + utterance and returns JSON:
+1. Titan Embeddings converts the transcript into a query vector.
+2. The vector store or Bedrock Knowledge Base searches embedded patient memories.
+3. The top relevant memories are returned with references to the original DynamoDB records.
+4. The response prompt receives only the relevant snippets, not the whole memory bank.
+
+Example:
+
+| Stored memory | Patient query | Match reason |
+|---------------|---------------|--------------|
+| `Keys are usually kept in the ceramic bowl by the front door.` | `Where are my keys?` | Semantic similarity, not exact wording |
+
+The retrieval layer should return structured context:
 
 ```json
 {
-  "relevantPeople": [],
-  "relevantObjects": [],
-  "relevantHistory": [],
-  "relevantRoutine": null,
-  "queryType": "person_inquiry"
+  "memories": [
+    {
+      "memoryId": "memory-...",
+      "type": "location",
+      "text": "Margaret usually leaves her glasses on the nightstand next to her bed or on the kitchen table.",
+      "score": 0.87
+    }
+  ],
+  "queryType": "object_location"
 }
 ```
 
 `queryType` enum: `person_inquiry`, `object_location`, `routine`, `general_comfort`, `distress`
 
-Uses `extractJSON()` to parse model output; falls back to empty context on parse failure.
+## Step 3 — Response generation (Claude via Bedrock)
 
-## Step 3 — Response generation (Bedrock)
-
-**Function:** `generateResponse(transcribedText, memoryContext, patient)`
+**Function:** `generateResponse(transcribedText, retrievedMemories, patient)`
 
 System prompt rules:
 
 - 1–3 short warm sentences
-- Never invent facts outside memory context
+- Never invent facts outside retrieved memory context
 - Use nickname; respect `preferences.comfortPhrases` and `avoidTopics`
 - Gentle handling of deceased persons via `deceasedMessage`
 - Warm redirect when unknown
@@ -125,15 +143,34 @@ If distressed:
 
 If `caregiverId` is null (no linked caregiver), alert is still saved; SNS may still fire.
 
-## Step 5 — Text-to-speech
+## Step 5 — Local text-to-speech (Piper)
 
-**Module:** `lambda/shared/polly.js`
+Piper is the voice output layer. It receives the final text response from Claude and converts it into audio for the patient.
 
-- Voice: **Ruth**
-- Engine: **neural**
-- Format: **mp3** → base64 in response
+What Piper does:
 
-Runs in `Promise.all` with distress detection.
+- Receives a plain text string.
+- Generates natural-sounding speech.
+- Plays audio through the local device or returns audio bytes/base64 to the client.
+
+What Piper does not do:
+
+- It does not reason.
+- It does not remember anything.
+- It does not choose what to say.
+- It does not interact with patient records or vector search.
+
+Piper was chosen because it can run locally, avoids sending voice output generation to a third-party TTS API, and can continue working in low-connectivity environments.
+
+Example local usage:
+
+```bash
+echo "Your glasses are on the nightstand." | \
+  piper --model en_US-lessac-medium.onnx \
+  --output_file response.wav
+```
+
+Recommended voice model for the prototype: `en_US-lessac-medium`.
 
 ## Step 6 — Persist interaction
 
@@ -153,7 +190,7 @@ Runs in `Promise.all` with distress detection.
 - `getUserMedia` for microphone
 - `MediaRecorder` with `audio/webm;codecs=opus` when supported
 - Tap orb: start → tap again: stop → base64 → `sendVoiceInput(patientId, base64)`
-- Playback: `data:audio/mpeg;base64,{audioResponse}`
+- Playback: `data:{mimeType};base64,{audioResponse}`
 
 ## Proactive messages (related)
 
@@ -161,7 +198,7 @@ Runs in `Promise.all` with distress detection.
 
 - Scans all patients
 - Compares `routine.schedule[].time` to current local time in patient `timezone` (±7 minutes)
-- Generates message + Polly audio, saves `proactive` interaction
+- Generates message + Piper audio, saves `proactive` interaction
 
 Not invoked from patient UI directly; separate from reactive `/voice` flow.
 
@@ -170,8 +207,10 @@ Not invoked from patient UI directly; separate from reactive `/voice` flow.
 | Stage | Typical bottleneck |
 |-------|-------------------|
 | Transcribe | 3–48s polling |
-| Bedrock | 2× calls per voice turn (context + response) + 1 if distress AI |
-| Polly | Usually sub-second |
+| Bedrock | Claude response generation + optional distress classification |
+| Embeddings | Query vector generation for each memory-aware turn |
+| Vector search | Retrieval latency depends on selected vector store / Knowledge Base |
+| Piper | Usually sub-second locally after model load |
 | Lambda timeout | 90s configured |
 
 ## Related docs
