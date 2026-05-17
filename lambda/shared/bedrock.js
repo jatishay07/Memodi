@@ -4,6 +4,21 @@ import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-r
 const agentClient = new BedrockAgentRuntimeClient({ region: process.env.AWS_REGION || "us-east-1" });
 const runtimeClient = new BedrockRuntimeClient({ region: process.env.AWS_REGION || "us-east-1" });
 
+function getRequiredBedrockConfig() {
+  const agentId = process.env.BEDROCK_AGENT_ID;
+  const agentAliasId = process.env.BEDROCK_AGENT_ALIAS_ID;
+
+  if (!agentId) {
+    throw new Error("BEDROCK_AGENT_ID is not set");
+  }
+
+  if (!agentAliasId) {
+    throw new Error("BEDROCK_AGENT_ALIAS_ID is not set");
+  }
+
+  return { agentId, agentAliasId };
+}
+
 export async function extractWithAI(prompt) {
   const response = await runtimeClient.send(new ConverseCommand({
     modelId: "us.amazon.nova-lite-v1:0",
@@ -18,9 +33,10 @@ export async function extractWithAI(prompt) {
 }
 
 export async function invokeAgent(sessionId, inputText) {
+  const { agentId, agentAliasId } = getRequiredBedrockConfig();
   const command = new InvokeAgentCommand({
-    agentId: process.env.BEDROCK_AGENT_ID,
-    agentAliasId: process.env.BEDROCK_AGENT_ALIAS_ID || "TSTALIASID",
+    agentId,
+    agentAliasId,
     sessionId,
     inputText,
   });
