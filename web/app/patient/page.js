@@ -12,7 +12,7 @@ import PatientWelcome from '../../components/PatientWelcome';
 import TutorialBubble from '../../components/TutorialBubble';
 import ComfortTray from '../../components/ComfortTray';
 import { useAuth } from '../../lib/auth';
-import { getPatient, sendTextInput, synthesizeWithPiper } from '../../lib/api';
+import { getPatient, sendTextInput, synthesizeWithPiper, generateConnectionCode } from '../../lib/api';
 import { playAudioBase64, startSpeechRecognition, stopSpeechRecognition } from '../../lib/audio';
 
 // TODO: connect soft listening chime (glass tone, ~200ms, low volume)
@@ -66,7 +66,38 @@ export default function PatientPage() {
   const [comfort, setComfort] = useState(DEFAULT_COMFORT);
   const [emotionDistress, setEmotionDistress] = useState(false);
 
+  // Connection code panel
+  const [sharingCode, setSharingCode] = useState('');
+  const [codeExpiresAt, setCodeExpiresAt] = useState(null);
+  const [codeGenerating, setCodeGenerating] = useState(false);
+  const [codeSecondsLeft, setCodeSecondsLeft] = useState(0);
+
   const handleEmotionDistress = useCallback(distressed => setEmotionDistress(distressed), []);
+
+  useEffect(() => {
+    if (!codeExpiresAt) return;
+    const tick = setInterval(() => {
+      const left = Math.max(0, Math.round((new Date(codeExpiresAt) - Date.now()) / 1000));
+      setCodeSecondsLeft(left);
+      if (left === 0) { setSharingCode(''); setCodeExpiresAt(null); }
+    }, 1000);
+    return () => clearInterval(tick);
+  }, [codeExpiresAt]);
+
+  async function handleGenerateCode() {
+    if (!user?.patientId) return;
+    setCodeGenerating(true);
+    try {
+      const { code, expiresAt } = await generateConnectionCode(user.patientId);
+      setSharingCode(code);
+      setCodeExpiresAt(expiresAt);
+      setCodeSecondsLeft(Math.round((new Date(expiresAt) - Date.now()) / 1000));
+    } catch (err) {
+      console.error('generate code error:', err);
+    } finally {
+      setCodeGenerating(false);
+    }
+  }
 
   useEffect(() => {
     if (!ready) return;
@@ -357,6 +388,84 @@ export default function PatientPage() {
       )}
 
       <EmotionMonitor active onDistressChange={handleEmotionDistress} />
+
+      {/* Share-with-caregiver code panel */}
+      {onboardingPhase === 'done' && (
+        <div style={{ position: 'fixed', bottom: 28, right: 28, zIndex: 30 }}>
+          {sharingCode && codeExpiresAt ? (
+            <div style={{
+              borderRadius: 28, padding: '28px 32px',
+              background: 'rgba(255,255,255,0.92)',
+              backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+              border: '2px solid rgba(220,79,124,0.18)',
+              boxShadow: '0 24px 60px rgba(220,79,124,0.16)',
+              textAlign: 'center', minWidth: 230,
+              animation: 'slideUpBounce .4s cubic-bezier(.34,1.56,.64,1)',
+            }}>
+              <p style={{
+                fontFamily: 'var(--font-sans)', fontSize: 11, fontWeight: 700,
+                color: '#DC4F7C', textTransform: 'uppercase', letterSpacing: '0.11em',
+                margin: '0 0 10px',
+              }}>
+                Share with caregiver
+              </p>
+              <p style={{
+                fontFamily: 'var(--font-serif)', fontSize: 46, fontWeight: 400,
+                color: '#2D2D2D', margin: '0 0 6px', letterSpacing: '0.15em', lineHeight: 1,
+              }}>
+                {sharingCode.slice(0, 3)}&thinsp;{sharingCode.slice(3)}
+              </p>
+              <p style={{ fontSize: 13, color: '#9C9C9C', margin: '0 0 20px' }}>
+                Expires in {String(Math.floor(codeSecondsLeft / 60)).padStart(2, '0')}:{String(codeSecondsLeft % 60).padStart(2, '0')}
+              </p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={handleGenerateCode}
+                  disabled={codeGenerating}
+                  style={{
+                    flex: 1, padding: '10px 12px', borderRadius: 999,
+                    border: '2px solid rgba(220,79,124,0.25)',
+                    background: 'rgba(220,79,124,0.06)',
+                    color: '#DC4F7C', fontSize: 14, cursor: 'pointer',
+                    fontFamily: 'var(--font-sans)', fontWeight: 500,
+                  }}
+                >
+                  New code
+                </button>
+                <button
+                  onClick={() => { setSharingCode(''); setCodeExpiresAt(null); }}
+                  style={{
+                    flex: 1, padding: '10px 12px', borderRadius: 999, border: 0,
+                    background: '#DC4F7C', color: '#fff', fontSize: 14, cursor: 'pointer',
+                    fontFamily: 'var(--font-sans)', fontWeight: 600,
+                    boxShadow: '0 6px 20px rgba(220,79,124,0.28)',
+                  }}
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={handleGenerateCode}
+              disabled={codeGenerating}
+              style={{
+                padding: '13px 22px', borderRadius: 999,
+                border: '2px solid rgba(220,79,124,0.28)',
+                background: 'rgba(255,255,255,0.78)',
+                backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+                color: '#DC4F7C', fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500,
+                cursor: 'pointer', boxShadow: '0 8px 24px rgba(220,79,124,0.10)',
+                transition: 'all .25s ease',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.96)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.78)'; }}
+            >
+              {codeGenerating ? '…' : '+ Share with caregiver'}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -185,6 +185,18 @@ functions:
       - httpApi:
           path: /voice/text
           method: POST
+  generateConnectionCode:
+    handler: lambda/generateConnectionCode/index.handler
+    events:
+      - httpApi:
+          path: /patient/generate-code
+          method: POST
+  connectToPatient:
+    handler: lambda/connectToPatient/index.handler
+    events:
+      - httpApi:
+          path: /caregiver/connect
+          method: POST
   manageMemoryDelete:
     handler: lambda/manageMemory/index.handler
     events:

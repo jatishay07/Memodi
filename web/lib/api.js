@@ -89,6 +89,12 @@ export async function editMemoryItem(patientId, field, index, item) {
 export async function identifyPhoto(patientId, photoBase64) {
   return request('/identify', { method: 'POST', body: JSON.stringify({ patientId, photoBase64 }) });
 }
+export async function generateConnectionCode(patientId) {
+  return request('/patient/generate-code', { method: 'POST', body: JSON.stringify({ patientId }) });
+}
+export async function connectToPatient(caregiverId, code) {
+  return request('/caregiver/connect', { method: 'POST', body: JSON.stringify({ caregiverId, code }) });
+}
 export async function getAlerts(patientId) {
   return request(`/alerts/${patientId}`);
 }

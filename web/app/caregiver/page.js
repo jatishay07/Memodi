@@ -6,7 +6,7 @@ import AlertCard from '../../components/AlertCard';
 import CaregiverNav from '../../components/CaregiverNav';
 import CaregiverAmbient from '../../components/CaregiverAmbient';
 import { useAuth } from '../../lib/auth';
-import { getAlerts, getInteractions, resolveAlert } from '../../lib/api';
+import { getAlerts, getInteractions, resolveAlert, connectToPatient } from '../../lib/api';
 
 function formatTime(iso) {
   const d = new Date(iso);
@@ -18,12 +18,17 @@ function formatTime(iso) {
 
 export default function CaregiverPage() {
   const router = useRouter();
-  const { user, ready, logout } = useAuth();
+  const { user, ready, logout, login } = useAuth();
 
   const [tab, setTab] = useState('alerts');
   const [alerts, setAlerts] = useState([]);
   const [interactions, setInteractions] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [connectModal, setConnectModal] = useState(false);
+  const [connectCode, setConnectCode] = useState('');
+  const [connectError, setConnectError] = useState('');
+  const [connectLoading, setConnectLoading] = useState(false);
 
   useEffect(() => {
     if (!ready) return;
@@ -41,6 +46,26 @@ export default function CaregiverPage() {
     if (alertsRes.status === 'fulfilled')       setAlerts(Array.isArray(alertsRes.value) ? alertsRes.value : []);
     if (interactionsRes.status === 'fulfilled') setInteractions(Array.isArray(interactionsRes.value) ? interactionsRes.value : []);
     setLoading(false);
+  }
+
+  async function handleConnect() {
+    const code = connectCode.replace(/\s/g, '');
+    if (code.length !== 6) { setConnectError('Please enter the full 6-digit code.'); return; }
+    setConnectLoading(true);
+    setConnectError('');
+    try {
+      const data = await connectToPatient(user.caregiverId, code);
+      login({ ...user, patientId: data.patientId, token: data.token });
+      setConnectModal(false);
+      setConnectCode('');
+      // Reload data for the newly connected patient
+      fetchAll();
+    } catch (err) {
+      const msg = err.response?.data?.error || err.message || 'Something went wrong.';
+      setConnectError(msg);
+    } finally {
+      setConnectLoading(false);
+    }
   }
 
   async function handleResolve(alertId) {
@@ -70,12 +95,65 @@ export default function CaregiverPage() {
         position: 'relative', zIndex: 1,
         padding: '120px 40px 0', maxWidth: 980, margin: '0 auto',
       }}>
-        <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 52, fontWeight: 400, margin: 0, letterSpacing: '-0.01em' }}>
-          Alerts &amp; notifications
-        </h1>
-        <p style={{ fontSize: 18, color: '#6B6B6B', margin: '8px 0 36px' }}>
-          Monitor and respond to important events
-        </p>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 8 }}>
+          <div>
+            <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 52, fontWeight: 400, margin: 0, letterSpacing: '-0.01em' }}>
+              Alerts &amp; notifications
+            </h1>
+            <p style={{ fontSize: 18, color: '#6B6B6B', margin: '8px 0 0' }}>
+              Monitor and respond to important events
+            </p>
+          </div>
+          {user?.patientId && (
+            <button
+              onClick={() => { setConnectCode(''); setConnectError(''); setConnectModal(true); }}
+              style={{
+                padding: '10px 18px', borderRadius: 999, border: '2px solid rgba(252,138,45,0.30)',
+                background: 'rgba(252,138,45,0.07)', color: '#FC8A2D',
+                fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 500,
+                cursor: 'pointer', transition: 'all .2s', alignSelf: 'center', marginTop: 8,
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(252,138,45,0.14)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(252,138,45,0.07)'; }}
+            >
+              Change patient
+            </button>
+          )}
+        </div>
+
+        {/* Connect banner — shown when no patient linked */}
+        {!user?.patientId && (
+          <div style={{
+            borderRadius: 24, padding: '28px 32px', margin: '28px 0',
+            background: 'rgba(255,255,255,0.65)',
+            backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+            border: '2px solid rgba(255,255,255,0.85)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap',
+          }}>
+            <div>
+              <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 26, fontWeight: 400, margin: '0 0 6px', color: '#2D2D2D' }}>
+                Connect to a patient
+              </h2>
+              <p style={{ fontSize: 15, color: '#6B6B6B', margin: 0, maxWidth: 480 }}>
+                Ask your patient to open Memodi and tap <strong>"+ Share with caregiver"</strong> — they&apos;ll see a 6-digit code for you to enter here.
+              </p>
+            </div>
+            <button
+              onClick={() => { setConnectCode(''); setConnectError(''); setConnectModal(true); }}
+              style={{
+                padding: '14px 28px', borderRadius: 999, border: 0,
+                background: '#FC8A2D', color: '#fff',
+                fontFamily: 'var(--font-sans)', fontSize: 16, fontWeight: 600,
+                cursor: 'pointer', whiteSpace: 'nowrap',
+                boxShadow: '0 10px 26px rgba(252,138,45,0.28)',
+              }}
+            >
+              Enter code
+            </button>
+          </div>
+        )}
+
+        <div style={{ marginBottom: 36 }} />
 
         {/* Stat tiles */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 18, marginBottom: 36 }}>
@@ -195,6 +273,108 @@ export default function CaregiverPage() {
           </>
         )}
       </div>
+      {/* Connect / change-patient modal */}
+      {connectModal && (
+        <div
+          onClick={() => setConnectModal(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 100,
+            background: 'rgba(0,0,0,0.50)', backdropFilter: 'blur(6px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 40, animation: 'fadeIn .3s ease',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: '100%', maxWidth: 480,
+              borderRadius: 32, background: 'rgba(255,255,255,0.96)',
+              border: '2px solid rgba(252,138,45,0.15)',
+              boxShadow: '0 32px 80px rgba(252,138,45,0.18)',
+              padding: '44px 44px 40px', position: 'relative',
+              animation: 'slideUpBounce .4s cubic-bezier(.34,1.56,.64,1)',
+            }}
+          >
+            <button
+              onClick={() => setConnectModal(false)}
+              style={{
+                position: 'absolute', top: 20, right: 20, width: 40, height: 40,
+                borderRadius: 999, background: 'rgba(252,138,45,0.08)', border: 0,
+                color: '#FC8A2D', fontSize: 18, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              ×
+            </button>
+            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 34, fontWeight: 400, margin: '0 0 8px', color: '#2D2D2D' }}>
+              {user?.patientId ? 'Change patient' : 'Connect to patient'}
+            </h2>
+            <p style={{ fontSize: 15, color: '#6B6B6B', margin: '0 0 28px', lineHeight: 1.55 }}>
+              Enter the 6-digit code shown on your patient&apos;s Memodi screen.
+            </p>
+
+            {/* Code input */}
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              placeholder="000 000"
+              value={connectCode}
+              onChange={e => {
+                setConnectError('');
+                setConnectCode(e.target.value.replace(/\D/g, '').slice(0, 6));
+              }}
+              style={{
+                width: '100%', padding: '18px 24px', borderRadius: 20,
+                background: '#FFF9F0',
+                border: `2px solid ${connectError ? '#C42B34' : 'rgba(252,138,45,0.30)'}`,
+                fontFamily: 'var(--font-serif)', fontSize: 36, color: '#2D2D2D',
+                outline: 'none', boxSizing: 'border-box', textAlign: 'center',
+                letterSpacing: '0.20em', marginBottom: 12,
+                transition: 'border-color .2s',
+              }}
+              onFocus={e => { e.currentTarget.style.borderColor = '#FC8A2D'; }}
+              onBlur={e => { if (!connectError) e.currentTarget.style.borderColor = 'rgba(252,138,45,0.30)'; }}
+              onKeyDown={e => { if (e.key === 'Enter') handleConnect(); }}
+            />
+
+            {connectError && (
+              <p style={{ fontSize: 14, color: '#C42B34', margin: '0 0 16px', lineHeight: 1.45 }}>
+                {connectError}
+              </p>
+            )}
+
+            <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
+              <button
+                onClick={() => setConnectModal(false)}
+                style={{
+                  flex: 1, padding: '14px 20px', borderRadius: 999,
+                  border: '2px solid rgba(255,255,255,0.85)',
+                  background: 'rgba(255,255,255,0.70)',
+                  color: '#6B6B6B', fontFamily: 'var(--font-sans)', fontSize: 16, fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConnect}
+                disabled={connectCode.length !== 6 || connectLoading}
+                style={{
+                  flex: 1, padding: '14px 20px', borderRadius: 999, border: 0,
+                  background: '#FC8A2D', color: '#fff',
+                  fontFamily: 'var(--font-sans)', fontSize: 16, fontWeight: 600,
+                  cursor: connectCode.length === 6 ? 'pointer' : 'not-allowed',
+                  opacity: connectCode.length !== 6 || connectLoading ? 0.45 : 1,
+                  boxShadow: '0 10px 28px rgba(252,138,45,0.30)',
+                }}
+              >
+                {connectLoading ? '…' : 'Connect'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

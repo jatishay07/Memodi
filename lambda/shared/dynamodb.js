@@ -157,6 +157,16 @@ export async function updatePatientListItem(patientId, field, index, newItem) {
   }));
 }
 
+export async function updateCaregiverField(caregiverId, field, value) {
+  await ddb.send(new UpdateCommand({
+    TableName: CAREGIVERS_TABLE(),
+    Key: { caregiverId },
+    UpdateExpression: `SET #f = :v`,
+    ExpressionAttributeNames: { "#f": field },
+    ExpressionAttributeValues: { ":v": value }
+  }));
+}
+
 export async function scanAllPatients() {
   const result = await ddb.send(new ScanCommand({ TableName: PATIENTS_TABLE() }));
   return result.Items ?? [];
