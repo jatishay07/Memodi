@@ -9,6 +9,7 @@ import Logo from '../../../components/Logo';
 
 const HERO = '/hero-fall.jpg';
 
+<<<<<<< Updated upstream
 const TESTIMONIALS = [
   {
     avatarSrc: 'https://randomuser.me/api/portraits/women/68.jpg',
@@ -23,6 +24,9 @@ const TESTIMONIALS = [
     text: "It remembers my family for me. That means the world.",
   },
 ];
+=======
+const PINK = '#DC4F7C';
+>>>>>>> Stashed changes
 
 export default function PatientAuthPage() {
   const router = useRouter();
@@ -114,8 +118,12 @@ export default function PatientAuthPage() {
         title="Join Memodi."
         description="Create your account and let Memodi care for you."
         heroImageSrc={HERO}
+<<<<<<< Updated upstream
         testimonials={TESTIMONIALS}
         accentColor="#DC4F7C"
+=======
+        accentColor={PINK}
+>>>>>>> Stashed changes
         onRegister={handleRegister}
         onSignIn={() => { setMode('login'); setError(''); }}
         loading={loading}
@@ -134,8 +142,12 @@ export default function PatientAuthPage() {
       title={<>Welcome<br /><span className="font-light">back.</span></>}
       description="Sign in to your Memodi account."
       heroImageSrc={HERO}
+<<<<<<< Updated upstream
       testimonials={TESTIMONIALS}
       accentColor="#DC4F7C"
+=======
+      accentColor={PINK}
+>>>>>>> Stashed changes
       onSignIn={handleLogin}
       onCreateAccount={() => { setMode('register'); setError(''); }}
       loading={loading}

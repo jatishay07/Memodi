@@ -16,23 +16,7 @@ function GlassInput({ children }) {
   );
 }
 
-function TestimonialCard({ testimonial, delay }) {
-  return (
-    <div className={`animate-testimonial ${delay}
-                     flex items-start gap-3 rounded-3xl
-                     bg-cream/70 backdrop-blur-xl border border-white/50
-                     p-5 w-64 shadow-lg`}>
-      <img src={testimonial.avatarSrc} className="h-10 w-10 object-cover rounded-2xl flex-shrink-0" alt="" />
-      <div className="text-sm leading-snug">
-        <p className="font-semibold text-ink">{testimonial.name}</p>
-        <p className="text-ink-faint text-xs">{testimonial.handle}</p>
-        <p className="mt-1.5 text-ink/80">{testimonial.text}</p>
-      </div>
-    </div>
-  );
-}
-
-function HeroPanel({ heroImageSrc, testimonials }) {
+function HeroPanel({ heroImageSrc }) {
   if (!heroImageSrc) return null;
   return (
     <section className="hidden md:block flex-1 relative p-4">
@@ -40,21 +24,6 @@ function HeroPanel({ heroImageSrc, testimonials }) {
         className="animate-slide-right animate-delay-200 absolute inset-4 rounded-3xl bg-cover bg-center"
         style={{ backgroundImage: `url(${heroImageSrc})` }}
       />
-      {testimonials.length > 0 && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-4 px-8 w-full justify-center pointer-events-none">
-          <TestimonialCard testimonial={testimonials[0]} delay="animate-delay-700" />
-          {testimonials[1] && (
-            <div className="hidden xl:flex">
-              <TestimonialCard testimonial={testimonials[1]} delay="animate-delay-900" />
-            </div>
-          )}
-          {testimonials[2] && (
-            <div className="hidden 2xl:flex">
-              <TestimonialCard testimonial={testimonials[2]} delay="animate-delay-1100" />
-            </div>
-          )}
-        </div>
-      )}
     </section>
   );
 }
@@ -65,7 +34,6 @@ export function SignInPage({
   title = 'Welcome back.',
   description,
   heroImageSrc,
-  testimonials = [],
   accentColor = '#DC4F7C',
   onSignIn,
   onGoogleSignIn,
@@ -156,7 +124,7 @@ export function SignInPage({
         </div>
       </section>
 
-      <HeroPanel heroImageSrc={heroImageSrc} testimonials={testimonials} />
+      <HeroPanel heroImageSrc={heroImageSrc} />
     </div>
   );
 }
@@ -168,7 +136,6 @@ export function RegisterPage({
   title = 'Create account.',
   description,
   heroImageSrc,
-  testimonials = [],
   accentColor = '#DC4F7C',
   onRegister,
   onSignIn,
@@ -222,7 +189,7 @@ export function RegisterPage({
         </div>
       </section>
 
-      <HeroPanel heroImageSrc={heroImageSrc} testimonials={testimonials} />
+      <HeroPanel heroImageSrc={heroImageSrc} />
     </div>
   );
 }
