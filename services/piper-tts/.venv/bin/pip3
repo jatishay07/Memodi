@@ -1,4 +1,4 @@
-#!/Users/gaganshivakumara/Documents/GitHub/Memodi/services/piper-tts/.venv/bin/python3.12
+#!/Users/Atishay/Documents/GitHub/LandingPage/Ember/services/piper-tts/.venv/bin/python3.14
 import sys
 from pip._internal.cli.main import main
 if __name__ == '__main__':
