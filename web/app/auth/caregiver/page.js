@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../lib/auth';
-import { registerCaregiver, loginCaregiver } from '../../../lib/api';
+import { registerCaregiver, loginCaregiver, verifyEmail as apiVerifyEmail, resendVerificationCode } from '../../../lib/api';
 import { SignInPage, RegisterPage, AuthField } from '../../../components/ui/sign-in';
 
 const HERO = '/hero-fall.jpg';
@@ -30,9 +30,12 @@ export default function CaregiverAuthPage() {
   const [mode, setMode] = useState('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  // After registration, show a "check your email" screen
   const [verifyEmail, setVerifyEmail] = useState('');
   const [verifyPatientName, setVerifyPatientName] = useState('');
+  const [verifyCode, setVerifyCode] = useState('');
+  const [verifyError, setVerifyError] = useState('');
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [verifyDone, setVerifyDone] = useState(false);
 
   useEffect(() => {
     if (!ready) return;
@@ -81,6 +84,30 @@ export default function CaregiverAuthPage() {
 
   if (!ready) return null;
 
+  async function handleVerify(e) {
+    e.preventDefault();
+    setVerifyError('');
+    setVerifyLoading(true);
+    try {
+      await apiVerifyEmail(verifyEmail, verifyCode);
+      setVerifyDone(true);
+    } catch (err) {
+      setVerifyError(err?.response?.data?.error || 'Incorrect code. Try again.');
+    } finally {
+      setVerifyLoading(false);
+    }
+  }
+
+  async function handleResend() {
+    setVerifyError('');
+    try {
+      await resendVerificationCode(verifyEmail);
+      setVerifyError('New code sent — check your email.');
+    } catch {
+      setVerifyError('Could not resend. Try again shortly.');
+    }
+  }
+
   /* Post-registration: verify email screen */
   if (verifyEmail) {
     return (
@@ -98,30 +125,96 @@ export default function CaregiverAuthPage() {
           boxShadow: '0 24px 60px rgba(45,45,45,0.12)',
           textAlign: 'center',
         }}>
-          <p style={{ fontSize: 40, margin: '0 0 16px' }}>✉️</p>
-          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 34, fontWeight: 400, color: '#2D2D2D', margin: '0 0 12px' }}>
-            Check your email
-          </h2>
-          {verifyPatientName && (
-            <p style={{ fontFamily: 'var(--font-sans)', fontSize: 16, color: '#FC8A2D', margin: '0 0 16px', fontWeight: 600 }}>
-              Connected to {verifyPatientName}
-            </p>
+          {verifyDone ? (
+            <>
+              <p style={{ fontSize: 40, margin: '0 0 16px' }}>✅</p>
+              <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 34, fontWeight: 400, color: '#2D2D2D', margin: '0 0 12px' }}>
+                Email verified!
+              </h2>
+              {verifyPatientName && (
+                <p style={{ fontFamily: 'var(--font-sans)', fontSize: 16, color: '#FC8A2D', margin: '0 0 16px', fontWeight: 600 }}>
+                  Connected to {verifyPatientName}
+                </p>
+              )}
+              <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, color: '#6B6B6B', margin: '0 0 28px' }}>
+                Your account is active. Sign in to access your dashboard.
+              </p>
+              <button
+                onClick={() => { setVerifyEmail(''); setVerifyDone(false); setMode('login'); }}
+                style={{
+                  width: '100%', padding: '15px 20px', borderRadius: 999, border: 0,
+                  background: '#FC8A2D', color: '#fff', fontSize: 16, fontWeight: 700,
+                  cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                  boxShadow: '0 8px 24px rgba(252,138,45,0.30)',
+                }}
+              >
+                Sign in
+              </button>
+            </>
+          ) : (
+            <>
+              <p style={{ fontSize: 40, margin: '0 0 16px' }}>✉️</p>
+              <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 34, fontWeight: 400, color: '#2D2D2D', margin: '0 0 8px' }}>
+                Check your email
+              </h2>
+              {verifyPatientName && (
+                <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: '#FC8A2D', margin: '0 0 12px', fontWeight: 600 }}>
+                  Connected to {verifyPatientName}
+                </p>
+              )}
+              <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: '#6B6B6B', lineHeight: 1.6, margin: '0 0 24px' }}>
+                We sent a 6-digit code to <strong>{verifyEmail}</strong>. Enter it below.
+              </p>
+              <form onSubmit={handleVerify} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="000000"
+                  value={verifyCode}
+                  onChange={e => { setVerifyError(''); setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6)); }}
+                  style={{
+                    padding: '16px 20px', borderRadius: 16, textAlign: 'center',
+                    border: `2px solid ${verifyError ? '#C42B34' : 'rgba(252,138,45,0.30)'}`,
+                    background: '#FFF9F0', fontFamily: 'var(--font-serif)',
+                    fontSize: 32, color: '#2D2D2D', letterSpacing: '0.25em',
+                    outline: 'none', width: '100%', boxSizing: 'border-box',
+                  }}
+                  onFocus={e => { e.currentTarget.style.borderColor = '#FC8A2D'; }}
+                  onBlur={e => { if (!verifyError) e.currentTarget.style.borderColor = 'rgba(252,138,45,0.30)'; }}
+                />
+                {verifyError && (
+                  <p style={{ fontSize: 13, color: verifyError.includes('sent') ? '#6B6B6B' : '#C42B34', margin: 0 }}>
+                    {verifyError}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  disabled={verifyCode.length !== 6 || verifyLoading}
+                  style={{
+                    padding: '15px 20px', borderRadius: 999, border: 0,
+                    background: '#FC8A2D', color: '#fff', fontSize: 16, fontWeight: 700,
+                    cursor: verifyCode.length === 6 ? 'pointer' : 'not-allowed',
+                    opacity: verifyCode.length !== 6 || verifyLoading ? 0.5 : 1,
+                    fontFamily: 'var(--font-sans)',
+                    boxShadow: '0 8px 24px rgba(252,138,45,0.28)',
+                  }}
+                >
+                  {verifyLoading ? 'Verifying…' : 'Verify email'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  style={{
+                    background: 'none', border: 'none', color: '#9C9C9C',
+                    fontSize: 13, cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                  }}
+                >
+                  Didn&apos;t get it? Resend code
+                </button>
+              </form>
+            </>
           )}
-          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, color: '#6B6B6B', lineHeight: 1.6, margin: '0 0 28px' }}>
-            We sent a verification link to <strong>{verifyEmail}</strong>. Click it to activate your account, then come back and sign in.
-          </p>
-          <button
-            onClick={() => { setVerifyEmail(''); setMode('login'); }}
-            style={{
-              width: '100%', padding: '15px 20px', borderRadius: 999, border: 0,
-              background: '#FC8A2D', color: '#fff',
-              fontSize: 16, fontWeight: 700, cursor: 'pointer',
-              fontFamily: 'var(--font-sans)',
-              boxShadow: '0 8px 24px rgba(252,138,45,0.30)',
-            }}
-          >
-            Go to sign in
-          </button>
         </div>
       </div>
     );

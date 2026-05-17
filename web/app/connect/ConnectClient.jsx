@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../lib/auth';
-import { registerCaregiver, loginCaregiver } from '../../lib/api';
+import { registerCaregiver, loginCaregiver, verifyEmail as apiVerifyEmail, resendVerificationCode } from '../../lib/api';
 
 const ACCENT = '#FC8A2D';
 
@@ -66,6 +66,10 @@ export default function ConnectClient({ code }) {
   const [error, setError] = useState('');
   const [verifyEmail, setVerifyEmail] = useState('');
   const [verifyPatientName, setVerifyPatientName] = useState('');
+  const [verifyCode, setVerifyCode] = useState('');
+  const [verifyError, setVerifyError] = useState('');
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [verifyDone, setVerifyDone] = useState(false);
 
   // Already logged-in caregiver → send to their dashboard (permanent link)
   useEffect(() => {
@@ -129,26 +133,106 @@ export default function ConnectClient({ code }) {
     );
   }
 
+  async function handleVerify(e) {
+    e.preventDefault();
+    setVerifyError('');
+    setVerifyLoading(true);
+    try {
+      await apiVerifyEmail(verifyEmail, verifyCode);
+      setVerifyDone(true);
+    } catch (err) {
+      setVerifyError(err?.response?.data?.error || 'Incorrect code. Try again.');
+    } finally {
+      setVerifyLoading(false);
+    }
+  }
+
+  async function handleResend() {
+    setVerifyError('');
+    try {
+      await resendVerificationCode(verifyEmail);
+      setVerifyError('New code sent — check your email.');
+    } catch {
+      setVerifyError('Could not resend. Try again shortly.');
+    }
+  }
+
   /* Post-registration: verify email */
   if (verifyEmail) {
     return (
       <Shell>
         <div style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: 40, margin: '0 0 16px' }}>✉️</p>
-          <p style={{ fontFamily: 'var(--font-serif)', fontSize: 28, color: '#2D2D2D', margin: '0 0 8px' }}>
-            Check your email
-          </p>
-          {verifyPatientName && (
-            <p style={{ fontFamily: 'var(--font-sans)', fontSize: 15, color: ACCENT, fontWeight: 600, margin: '0 0 12px' }}>
-              Connected to {verifyPatientName}
-            </p>
+          {verifyDone ? (
+            <>
+              <p style={{ fontSize: 40, margin: '0 0 16px' }}>✅</p>
+              <p style={{ fontFamily: 'var(--font-serif)', fontSize: 28, color: '#2D2D2D', margin: '0 0 8px' }}>
+                Email verified!
+              </p>
+              {verifyPatientName && (
+                <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: ACCENT, fontWeight: 600, margin: '0 0 12px' }}>
+                  Connected to {verifyPatientName}
+                </p>
+              )}
+              <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: '#6B6B6B', margin: '0 0 24px' }}>
+                Your account is active. Sign in to continue.
+              </p>
+              <Btn type="button" onClick={() => { setVerifyEmail(''); setVerifyDone(false); setMode('login'); }}>
+                Sign in
+              </Btn>
+            </>
+          ) : (
+            <>
+              <p style={{ fontSize: 40, margin: '0 0 16px' }}>✉️</p>
+              <p style={{ fontFamily: 'var(--font-serif)', fontSize: 28, color: '#2D2D2D', margin: '0 0 8px' }}>
+                Check your email
+              </p>
+              {verifyPatientName && (
+                <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: ACCENT, fontWeight: 600, margin: '0 0 12px' }}>
+                  Connected to {verifyPatientName}
+                </p>
+              )}
+              <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: '#6B6B6B', lineHeight: 1.6, margin: '0 0 20px' }}>
+                We sent a 6-digit code to <strong>{verifyEmail}</strong>. Enter it below.
+              </p>
+              <form onSubmit={handleVerify} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="000000"
+                  value={verifyCode}
+                  onChange={e => { setVerifyError(''); setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6)); }}
+                  style={{
+                    padding: '16px 20px', borderRadius: 16, textAlign: 'center',
+                    border: `2px solid ${verifyError ? '#C42B34' : 'rgba(252,138,45,0.30)'}`,
+                    background: '#FFF9F0', fontFamily: 'var(--font-serif)',
+                    fontSize: 32, color: '#2D2D2D', letterSpacing: '0.25em',
+                    outline: 'none', width: '100%', boxSizing: 'border-box',
+                  }}
+                  onFocus={e => { e.currentTarget.style.borderColor = ACCENT; }}
+                  onBlur={e => { if (!verifyError) e.currentTarget.style.borderColor = 'rgba(252,138,45,0.30)'; }}
+                />
+                {verifyError && (
+                  <p style={{ fontSize: 13, color: verifyError.includes('sent') ? '#6B6B6B' : '#C42B34', margin: 0 }}>
+                    {verifyError}
+                  </p>
+                )}
+                <Btn loading={verifyLoading} type="submit">
+                  {verifyCode.length === 6 ? 'Verify email' : `Enter ${6 - verifyCode.length} more digits`}
+                </Btn>
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  style={{
+                    background: 'none', border: 'none', color: '#9C9C9C',
+                    fontSize: 13, cursor: 'pointer', fontFamily: 'var(--font-sans)',
+                  }}
+                >
+                  Didn&apos;t get it? Resend code
+                </button>
+              </form>
+            </>
           )}
-          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: '#6B6B6B', lineHeight: 1.6, margin: '0 0 24px' }}>
-            We sent a verification link to <strong>{verifyEmail}</strong>. Click it, then come back to sign in.
-          </p>
-          <Btn type="button" onClick={() => { setVerifyEmail(''); setMode('login'); }}>
-            Go to sign in
-          </Btn>
         </div>
       </Shell>
     );
