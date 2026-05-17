@@ -2,14 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ANALYZE_INTERVAL_MS,
   EMOTION_COLORS,
   EMOTION_ORDER,
   analyzeFrame,
   checkDeepfaceHealth,
   formatEmotionLabel,
+  getAnalyzeIntervalMs,
   isNegativeEmotion,
   normalizeScores,
+  usesLocalEmotionService,
 } from '../lib/emotion';
 
 const NEGATIVE_STREAK_THRESHOLD = 2;
@@ -59,7 +60,7 @@ export default function EmotionMonitor({ onDistressChange, active = true }) {
   onDistressRef.current = onDistressChange;
   const negativeStreakRef = useRef(0);
 
-  // 'loading' | 'live' | 'camera-denied' | 'no-analysis'
+  // 'loading' | 'live' | 'camera-denied' | 'analysis-unavailable'
   const [status, setStatus] = useState('loading');
   const [emotion, setEmotion] = useState(null);
   const [scores, setScores] = useState({});
@@ -80,7 +81,7 @@ export default function EmotionMonitor({ onDistressChange, active = true }) {
     ctx.drawImage(video, 0, 0, w, h);
 
     const base64 = canvas.toDataURL('image/jpeg', 0.65).split(',')[1];
-    const result = await analyzeFrame(base64);
+    const result = await analyzeFrame(base64, { width: w, height: h });
 
     const overlay = overlayRef.current;
     if (overlay) {
@@ -137,7 +138,7 @@ export default function EmotionMonitor({ onDistressChange, active = true }) {
         });
       await waitForVideo();
 
-      // Start the camera first — always, regardless of DeepFace
+      // Start the camera first — always, regardless of analyzer health
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
@@ -158,11 +159,10 @@ export default function EmotionMonitor({ onDistressChange, active = true }) {
       await video.play();
       setStatus('live');
 
-      // DeepFace is optional — if unavailable, camera stays on but no analysis
-      const deepfaceOk = await checkDeepfaceHealth();
+      const analysisOk = await checkDeepfaceHealth();
       if (cancelled) return;
-      if (!deepfaceOk) {
-        setStatus('no-analysis');
+      if (!analysisOk) {
+        setStatus('analysis-unavailable');
         return;
       }
 
@@ -172,13 +172,19 @@ export default function EmotionMonitor({ onDistressChange, active = true }) {
         try {
           await runAnalysis();
         } catch {
-          // Analysis failure is silent — camera stays on
+          if (timer) clearInterval(timer);
+          negativeStreakRef.current = 0;
+          setFaceDetected(false);
+          setEmotion(null);
+          setScores({});
+          setStatus('analysis-unavailable');
+          onDistressRef.current?.(false);
         } finally {
           busy = false;
         }
       };
 
-      timer = setInterval(tick, ANALYZE_INTERVAL_MS);
+      timer = setInterval(tick, getAnalyzeIntervalMs());
       tick();
     }
 
@@ -193,9 +199,13 @@ export default function EmotionMonitor({ onDistressChange, active = true }) {
     };
   }, [active, runAnalysis]);
 
+  const usesLocalService = usesLocalEmotionService();
   const dominantLabel = faceDetected ? formatEmotionLabel(emotion) : '—';
   const dominantColor = faceDetected ? EMOTION_COLORS[emotion] : '#9C9C9C';
-  const showVideo = status === 'live' || status === 'loading' || status === 'no-analysis';
+  const showVideo = status === 'live' || status === 'loading' || status === 'analysis-unavailable';
+  const unavailableMessage = usesLocalService
+    ? 'Emotion analysis is offline. Start the local DeepFace service to see emotions.'
+    : 'Emotion analysis is temporarily unavailable.';
 
   return (
     <Panel>
@@ -242,6 +252,12 @@ export default function EmotionMonitor({ onDistressChange, active = true }) {
       {status === 'camera-denied' && (
         <p className="text-sm text-center mb-2" style={{ color: '#C42B34' }}>
           Allow camera access to see live emotions.
+        </p>
+      )}
+
+      {status === 'analysis-unavailable' && (
+        <p className="text-sm text-center mb-2" style={{ color: '#6B6B6B' }}>
+          {unavailableMessage}
         </p>
       )}
 

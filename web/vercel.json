@@ -1,6 +1,7 @@
 {
   "framework": "nextjs",
   "env": {
-    "NEXT_PUBLIC_API_BASE_URL": "https://ja6c3n2n3l.execute-api.us-east-1.amazonaws.com"
+    "NEXT_PUBLIC_API_BASE_URL": "https://ja6c3n2n3l.execute-api.us-east-1.amazonaws.com",
+    "EMOTION_API_BASE_URL": "https://ja6c3n2n3l.execute-api.us-east-1.amazonaws.com"
   }
 }

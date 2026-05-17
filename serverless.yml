@@ -73,6 +73,7 @@ provider:
           Action:
             - rekognition:SearchFacesByImage
             - rekognition:IndexFaces
+            - rekognition:DetectFaces
           Resource: '*'
         - Effect: Allow
           Action:
@@ -153,6 +154,16 @@ functions:
     events:
       - httpApi:
           path: /identify
+          method: POST
+  analyzeEmotion:
+    handler: lambda/analyzeEmotion/index.handler
+    timeout: 30
+    events:
+      - httpApi:
+          path: /emotion/health
+          method: GET
+      - httpApi:
+          path: /emotion/analyze
           method: POST
   getPatient:
     handler: lambda/getPatient/index.handler
