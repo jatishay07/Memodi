@@ -1,18 +1,19 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Mic } from 'lucide-react';
 import Orb from '../../components/Orb';
 import Ambient from '../../components/Ambient';
 import AtmosphericDepth from '../../components/AtmosphericDepth';
+import EmotionMonitor from '../../components/EmotionMonitor';
 import PatientNav from '../../components/PatientNav';
 import PatientWelcome from '../../components/PatientWelcome';
 import TutorialBubble from '../../components/TutorialBubble';
 import ComfortTray from '../../components/ComfortTray';
 import { useAuth } from '../../lib/auth';
-import { getPatient, sendVoiceInput } from '../../lib/api';
-import { requestAudioPermission, startRecording, stopRecordingAndGetBase64, playAudioBase64 } from '../../lib/audio';
+import { getPatient, sendTextInput, synthesizeWithPiper } from '../../lib/api';
+import { playAudioBase64, startSpeechRecognition, stopSpeechRecognition } from '../../lib/audio';
 
 // TODO: connect soft listening chime (glass tone, ~200ms, low volume)
 // TODO: connect gentle speech-start sound (warm chime, play on orb → speaking)
@@ -63,7 +64,9 @@ export default function PatientPage() {
 
   // Comfort / accessibility settings
   const [comfort, setComfort] = useState(DEFAULT_COMFORT);
+  const [emotionDistress, setEmotionDistress] = useState(false);
 
+  const handleEmotionDistress = useCallback(distressed => setEmotionDistress(distressed), []);
 
   useEffect(() => {
     if (!ready) return;
@@ -74,7 +77,6 @@ export default function PatientPage() {
       .then(setPatient)
       .catch(() => setPatient({ name: user.name || 'Friend', nickname: user.name?.split(' ')[0] || 'Friend' }));
 
-    requestAudioPermission();
     const t = setInterval(() => setClock(formatClock()), 60000);
     return () => clearInterval(t);
   }, [ready, user]);
@@ -100,35 +102,42 @@ export default function PatientPage() {
     if (isProcessing) return;
     setError('');
 
-    if (!isRecording) {
-      try {
-        await startRecording();
-        setIsRecording(true);
-        setOrbState('listening');
-        setResponse('');
-        // TODO: play soft listening chime here
-      } catch {
-        setError('Microphone unavailable — please allow access in your browser.');
-      }
+    if (isRecording) {
+      stopSpeechRecognition();
+      setIsRecording(false);
+      return;
+    }
+
+    setIsRecording(true);
+    setOrbState('listening');
+    setResponse('');
+
+    let transcript;
+    try {
+      transcript = await startSpeechRecognition();
+    } catch (err) {
+      console.error('STT error:', err);
+      setError('Microphone unavailable — please allow access in your browser.');
+      setIsRecording(false);
+      setOrbState('idle');
       return;
     }
 
     setIsRecording(false);
+    if (!transcript?.trim()) { setOrbState('idle'); return; }
+
     setIsProcessing(true);
     setOrbState('thinking');
 
     try {
-      const base64 = await stopRecordingAndGetBase64();
-      if (!base64) { setOrbState('idle'); setIsProcessing(false); return; }
-
-      const result = await sendVoiceInput(user.patientId, base64);
+      const result = await sendTextInput(user.patientId, transcript.trim());
 
       setOrbState(result.isDistressed ? 'distress' : 'speaking');
       setResponse(result.response);
-      // TODO: play gentle speech-start sound here
 
       if (audioRef.current) audioRef.current.pause();
-      const audio = await playAudioBase64(result.audioResponse);
+      const { audioBase64, mimeType } = await synthesizeWithPiper(result.response);
+      const audio = await playAudioBase64(audioBase64, mimeType);
       audioRef.current = audio;
       audio.onended = () => setOrbState('idle');
     } catch (err) {
@@ -145,6 +154,7 @@ export default function PatientPage() {
   if (!ready) return null;
 
   const name = patient?.nickname || patient?.name?.split(' ')[0] || user?.name?.split(' ')[0] || 'Margaret';
+  const displayOrbState = orbState === 'idle' && emotionDistress ? 'distress' : orbState;
   const hint = isProcessing ? "I'm thinking…" : isRecording ? 'Listening…' : 'Tap to speak with me';
   const micActive = isRecording;
   const ts = comfort.textScale;
@@ -212,7 +222,7 @@ export default function PatientPage() {
             transform: activeResponse ? 'translateX(-80px) scale(0.75)' : 'translateX(0) scale(1)',
             opacity: onboardingPhase === 'tutorial' ? 0.90 : 1,
           }}>
-            <Orb state={orbState} size={activeResponse ? 390 : 480} />
+            <Orb state={displayOrbState} size={activeResponse ? 390 : 480} />
           </div>
 
           {/* Response card */}
@@ -330,6 +340,8 @@ export default function PatientPage() {
       {onboardingPhase === 'done' && (
         <ComfortTray settings={comfort} onChange={handleComfortChange} />
       )}
+
+      <EmotionMonitor active onDistressChange={handleEmotionDistress} />
     </div>
   );
 }

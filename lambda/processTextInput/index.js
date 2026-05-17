@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
-import { getPatient, saveInteraction, saveAlert } from "../shared/dynamodb.js";
+import { getPatient, saveInteraction, saveAlert, appendToPatientList } from "../shared/dynamodb.js";
 import { invokeAgent } from "../shared/bedrock.js";
 
 const snsClient = new SNSClient({ region: process.env.AWS_REGION || "us-east-1" });
@@ -28,6 +28,57 @@ function detectDistress(patientSaid) {
   };
 }
 
+function buildMemorySummary(patient, nickname) {
+  const people = patient.familyMembers ?? [];
+  const history = patient.lifeHistory ?? [];
+  const objects = patient.objects ?? [];
+  const events = patient.upcomingEvents ?? [];
+
+  const lines = [];
+  if (people.length) {
+    lines.push(`People ${nickname} knows: ${people.map(p => `${p.name} (${p.relationship}${p.notes ? ", " + p.notes : ""})`).join("; ")}`);
+  }
+  if (history.length) {
+    lines.push(`Life memories: ${history.slice(-15).join("; ")}`);
+  }
+  if (objects.length) {
+    lines.push(`Familiar objects: ${objects.map(o => o.name || o).join(", ")}`);
+  }
+  if (events.length) {
+    lines.push(`Upcoming events: ${events.map(e => e.title || e).join(", ")}`);
+  }
+  return lines.length ? lines.join("\n") : null;
+}
+
+// Extract memorable facts from what the patient said (fast, no extra API call)
+function quickExtractMemories(text) {
+  const relationships = ["daughter", "son", "wife", "husband", "sister", "brother", "mother", "father", "friend", "grandson", "granddaughter", "grandchild", "niece", "nephew", "nurse", "doctor"];
+  const people = [];
+  const facts = [];
+
+  for (const rel of relationships) {
+    const nameMatch = text.match(new RegExp(`my ${rel}[,\\s]+(?:(?:is|was)\\s+)?([A-Z][a-z]+)`, "i"));
+    if (nameMatch) {
+      people.push({ name: nameMatch[1], relationship: rel, source: "conversation", addedAt: new Date().toISOString() });
+    } else if (new RegExp(`my ${rel}`, "i").test(text)) {
+      people.push({ relationship: rel, source: "conversation", addedAt: new Date().toISOString() });
+    }
+  }
+
+  const factPatterns = [
+    /i (?:used to|used to love|love|like|enjoy|miss|remember|hate) [^.!?\n]{5,80}/gi,
+    /i (?:worked as|was a|am a|was an|am an) [^.!?\n]{3,60}/gi,
+    /i (?:lived in|grew up in|was born in|went to) [^.!?\n]{3,60}/gi,
+  ];
+  for (const pattern of factPatterns) {
+    for (const m of [...text.matchAll(pattern)]) {
+      facts.push(m[0].trim());
+    }
+  }
+
+  return { people, facts };
+}
+
 export const handler = async (event) => {
   if (event.requestContext?.http?.method === "OPTIONS") {
     return { statusCode: 200, headers: CORS, body: "" };
@@ -46,17 +97,42 @@ export const handler = async (event) => {
 
     const nickname = patient.nickname || patient.name?.split(" ")[0] || patient.name;
     const age = patient.dateOfBirth ? new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear() : "";
-    const comfortPhrases = patient.preferences?.comfortPhrases?.join(", ") ?? "";
     const avoidTopics = patient.preferences?.avoidTopics?.join(", ") ?? "";
+    const memorySummary = buildMemorySummary(patient, nickname);
 
-    const agentInput = `Patient name: ${patient.name}${age ? `, age ${age}` : ""}. Nickname: ${nickname}.
-Comfort phrases to use naturally: ${comfortPhrases || "none"}.
-Topics to never discuss: ${avoidTopics || "none"}.
-Patient memory profile: ${JSON.stringify(patient.memoryBank ?? {})}
-The patient just said: "${text}"
-Respond as Memodi in 1-3 warm, short sentences using only information from their profile. Never make up facts.`;
+    const agentInput = `You are talking with ${nickname}${age ? `, age ${age}` : ""}.
+${memorySummary ? memorySummary : `No specific memories on file yet for ${nickname}.`}
+${avoidTopics ? `Never bring up: ${avoidTopics}.` : ""}
 
-    const responseText = await invokeAgent(patientId, agentInput);
+${nickname} just said: "${text}"
+
+Respond directly and specifically to what they said in 1-3 warm, short sentences. Address them by name. Reference the people and memories above when relevant. Do NOT say generic phrases like "you are loved", "everything is okay", or "you are safe".`;
+
+    // Extract and save new memories from this conversation (inline, fast)
+    const { people, facts } = quickExtractMemories(text);
+    const memoryUpdates = [];
+
+    for (const person of people) {
+      const alreadyKnown = (patient.familyMembers ?? []).some(
+        p => p.name === person.name && p.relationship === person.relationship
+      );
+      if (!alreadyKnown) {
+        memoryUpdates.push(appendToPatientList(patientId, "familyMembers", person));
+      }
+    }
+    for (const fact of facts) {
+      const alreadyKnown = (patient.lifeHistory ?? []).includes(fact);
+      if (!alreadyKnown) {
+        memoryUpdates.push(appendToPatientList(patientId, "lifeHistory", fact));
+      }
+    }
+
+    // Run agent + memory saves in parallel
+    const [responseText] = await Promise.all([
+      invokeAgent(patientId, agentInput),
+      ...memoryUpdates,
+    ]);
+
     const distressResult = detectDistress(text);
 
     if (distressResult.isDistressed) {
