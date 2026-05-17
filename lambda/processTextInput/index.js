@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
-import { getPatient, saveInteraction, saveAlert, appendToPatientList } from "../shared/dynamodb.js";
-import { invokeAgent } from "../shared/bedrock.js";
+import { getPatient, saveInteraction, saveAlert, appendToPatientList, getInteractionsByPatient } from "../shared/dynamodb.js";
+import { invokeAgent, extractWithAI } from "../shared/bedrock.js";
 
 const snsClient = new SNSClient({ region: process.env.AWS_REGION || "us-east-1" });
 
@@ -36,10 +36,14 @@ function buildMemorySummary(patient, nickname) {
 
   const lines = [];
   if (people.length) {
-    lines.push(`People ${nickname} knows: ${people.map(p => `${p.name} (${p.relationship}${p.notes ? ", " + p.notes : ""})`).join("; ")}`);
+    const peopleStr = people
+      .filter(p => p.name || p.relationship)
+      .map(p => [p.name, p.relationship, p.notes].filter(Boolean).join(" — "))
+      .join("; ");
+    if (peopleStr) lines.push(`People ${nickname} knows: ${peopleStr}`);
   }
   if (history.length) {
-    lines.push(`Life memories: ${history.slice(-15).join("; ")}`);
+    lines.push(`Things ${nickname} has shared: ${history.slice(-20).join("; ")}`);
   }
   if (objects.length) {
     lines.push(`Familiar objects: ${objects.map(o => o.name || o).join(", ")}`);
@@ -50,34 +54,6 @@ function buildMemorySummary(patient, nickname) {
   return lines.length ? lines.join("\n") : null;
 }
 
-// Extract memorable facts from what the patient said (fast, no extra API call)
-function quickExtractMemories(text) {
-  const relationships = ["daughter", "son", "wife", "husband", "sister", "brother", "mother", "father", "friend", "grandson", "granddaughter", "grandchild", "niece", "nephew", "nurse", "doctor"];
-  const people = [];
-  const facts = [];
-
-  for (const rel of relationships) {
-    const nameMatch = text.match(new RegExp(`my ${rel}[,\\s]+(?:(?:is|was)\\s+)?([A-Z][a-z]+)`, "i"));
-    if (nameMatch) {
-      people.push({ name: nameMatch[1], relationship: rel, source: "conversation", addedAt: new Date().toISOString() });
-    } else if (new RegExp(`my ${rel}`, "i").test(text)) {
-      people.push({ relationship: rel, source: "conversation", addedAt: new Date().toISOString() });
-    }
-  }
-
-  const factPatterns = [
-    /i (?:used to|used to love|love|like|enjoy|miss|remember|hate) [^.!?\n]{5,80}/gi,
-    /i (?:worked as|was a|am a|was an|am an) [^.!?\n]{3,60}/gi,
-    /i (?:lived in|grew up in|was born in|went to) [^.!?\n]{3,60}/gi,
-  ];
-  for (const pattern of factPatterns) {
-    for (const m of [...text.matchAll(pattern)]) {
-      facts.push(m[0].trim());
-    }
-  }
-
-  return { people, facts };
-}
 
 export const handler = async (event) => {
   if (event.requestContext?.http?.method === "OPTIONS") {
@@ -92,7 +68,11 @@ export const handler = async (event) => {
   if (!patientId || !text) return respond(400, { error: "patientId and text are required" });
 
   try {
-    const patient = await getPatient(patientId);
+    // Fetch patient + recent conversation history in parallel
+    const [patient, recentInteractions] = await Promise.all([
+      getPatient(patientId),
+      getInteractionsByPatient(patientId, 10),
+    ]);
     if (!patient) return respond(404, { error: "Patient not found" });
 
     const nickname = patient.nickname || patient.name?.split(" ")[0] || patient.name;
@@ -100,38 +80,62 @@ export const handler = async (event) => {
     const avoidTopics = patient.preferences?.avoidTopics?.join(", ") ?? "";
     const memorySummary = buildMemorySummary(patient, nickname);
 
-    const agentInput = `You are talking with ${nickname}${age ? `, age ${age}` : ""}.
-${memorySummary ? memorySummary : `No specific memories on file yet for ${nickname}.`}
-${avoidTopics ? `Never bring up: ${avoidTopics}.` : ""}
+    // Recent conversation history (most recent first → reverse to chronological)
+    const history = recentInteractions
+      .slice(0, 8)
+      .reverse()
+      .map(i => `${nickname}: "${i.patientSaid}" → Memodi: "${i.memodiResponded}"`)
+      .join("\n");
+
+    const agentInput = `You are Memodi, talking with ${nickname}${age ? `, age ${age}` : ""}.
+
+${memorySummary || `No memory profile yet for ${nickname}.`}
+
+${history ? `Recent conversations:\n${history}` : ""}
+${avoidTopics ? `\nNever bring up: ${avoidTopics}.` : ""}
 
 ${nickname} just said: "${text}"
 
-Respond directly and specifically to what they said in 1-3 warm, short sentences. Address them by name. Reference the people and memories above when relevant. Do NOT say generic phrases like "you are loved", "everything is okay", or "you are safe".`;
+Respond in 1-3 warm, short sentences. Be specific to what they said. Reference their memories and past conversations when relevant. Do NOT use generic phrases like "you are loved", "everything is okay", or "you are safe".`;
 
-    // Extract and save new memories from this conversation (inline, fast)
-    const { people, facts } = quickExtractMemories(text);
-    const memoryUpdates = [];
+    const extractionPrompt = `Extract memorable facts from what ${nickname} said. Return JSON only:
+{
+  "people": [{"name": "string or null", "relationship": "string or null"}],
+  "facts": ["short fact about their life, preferences, or experiences"]
+}
+Only include entries where something was clearly stated. Empty arrays if nothing to extract.
+${nickname} said: "${text}"`;
 
-    for (const person of people) {
-      const alreadyKnown = (patient.familyMembers ?? []).some(
-        p => p.name === person.name && p.relationship === person.relationship
-      );
-      if (!alreadyKnown) {
-        memoryUpdates.push(appendToPatientList(patientId, "familyMembers", person));
-      }
-    }
-    for (const fact of facts) {
-      const alreadyKnown = (patient.lifeHistory ?? []).includes(fact);
-      if (!alreadyKnown) {
-        memoryUpdates.push(appendToPatientList(patientId, "lifeHistory", fact));
-      }
-    }
-
-    // Run agent + memory saves in parallel
-    const [responseText] = await Promise.all([
+    const [responseText, extracted] = await Promise.all([
       invokeAgent(patientId, agentInput),
-      ...memoryUpdates,
+      extractWithAI(extractionPrompt),
     ]);
+
+    const memoryUpdates = [];
+    if (extracted?.people?.length) {
+      for (const person of extracted.people) {
+        if (!person.name && !person.relationship) continue;
+        const alreadyKnown = (patient.familyMembers ?? []).some(
+          p => p.relationship === person.relationship && (!person.name || p.name === person.name)
+        );
+        if (!alreadyKnown) {
+          memoryUpdates.push(appendToPatientList(patientId, "familyMembers", {
+            ...person,
+            source: "conversation",
+            addedAt: new Date().toISOString(),
+          }));
+        }
+      }
+    }
+    if (extracted?.facts?.length) {
+      for (const fact of extracted.facts) {
+        const alreadyKnown = (patient.lifeHistory ?? []).some(h => h === fact);
+        if (!alreadyKnown) {
+          memoryUpdates.push(appendToPatientList(patientId, "lifeHistory", fact));
+        }
+      }
+    }
+    if (memoryUpdates.length) await Promise.all(memoryUpdates);
 
     const distressResult = detectDistress(text);
 
