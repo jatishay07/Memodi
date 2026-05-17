@@ -181,11 +181,16 @@ export default function PatientPage() {
       setOrbState(result.isDistressed ? 'distress' : 'speaking');
       setResponse(result.response);
 
-      if (audioRef.current) audioRef.current.pause();
-      const { audioBase64, mimeType } = await synthesizeWithPiper(result.response);
-      const audio = await playAudioBase64(audioBase64, mimeType);
-      audioRef.current = audio;
-      audio.onended = () => setOrbState('idle');
+      // TTS is optional — only available when Piper is running locally
+      try {
+        if (audioRef.current) audioRef.current.pause();
+        const { audioBase64, mimeType } = await synthesizeWithPiper(result.response);
+        const audio = await playAudioBase64(audioBase64, mimeType);
+        audioRef.current = audio;
+        audio.onended = () => setOrbState('idle');
+      } catch {
+        setOrbState('idle');
+      }
     } catch (err) {
       console.error(err);
       setError('Let me try that again.');
