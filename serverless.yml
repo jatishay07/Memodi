@@ -30,7 +30,8 @@ provider:
     DYNAMODB_CAREGIVERS_TABLE: memodi-caregivers
     S3_PHOTOS_BUCKET: memodi-photos
     S3_VOICE_BUCKET: memodi-voice-recordings
-    BEDROCK_MODEL_ID: anthropic.claude-sonnet-4-20250514
+    BEDROCK_AGENT_ID: TIZBKTXHVL
+    BEDROCK_AGENT_ALIAS_ID: TSTALIASID
     SNS_CAREGIVER_TOPIC_ARN: ${env:SNS_CAREGIVER_TOPIC_ARN}
     JWT_SECRET: ${env:JWT_SECRET}
     COGNITO_USER_POOL_ID: !Ref CognitoUserPool
@@ -57,6 +58,7 @@ provider:
         - Effect: Allow
           Action:
             - bedrock:InvokeModel
+            - bedrock:InvokeAgent
           Resource: '*'
         - Effect: Allow
           Action:
@@ -176,6 +178,13 @@ functions:
       - httpApi:
           path: /interactions/{patientId}
           method: GET
+  processTextInput:
+    handler: lambda/processTextInput/index.handler
+    timeout: 60
+    events:
+      - httpApi:
+          path: /voice/text
+          method: POST
   getScheduledMessage:
     handler: lambda/getScheduledMessage/index.handler
     timeout: 60
@@ -184,6 +193,21 @@ functions:
 
 resources:
   Resources:
+    VoiceRecordingsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: memodi-voice-recordings
+        LifecycleConfiguration:
+          Rules:
+            - Id: DeleteOldRecordings
+              Status: Enabled
+              ExpirationInDays: 1
+
+    PhotosBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: memodi-photos
+
     CognitoUserPool:
       Type: AWS::Cognito::UserPool
       Properties:
