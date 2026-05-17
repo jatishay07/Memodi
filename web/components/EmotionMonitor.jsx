@@ -8,7 +8,6 @@ import {
   analyzeFrame,
   checkDeepfaceHealth,
   formatEmotionLabel,
-  isEmotionEnabled,
   isNegativeEmotion,
   normalizeScores,
 } from '../lib/emotion';
@@ -60,6 +59,7 @@ export default function EmotionMonitor({ onDistressChange, active = true }) {
   onDistressRef.current = onDistressChange;
   const negativeStreakRef = useRef(0);
 
+  // 'loading' | 'live' | 'camera-denied' | 'no-analysis'
   const [status, setStatus] = useState('loading');
   const [emotion, setEmotion] = useState(null);
   const [scores, setScores] = useState({});
@@ -119,10 +119,7 @@ export default function EmotionMonitor({ onDistressChange, active = true }) {
   }, []);
 
   useEffect(() => {
-    if (!isEmotionEnabled() || !active) {
-      setStatus('disabled');
-      return undefined;
-    }
+    if (!active) return undefined;
 
     let cancelled = false;
     let stream = null;
@@ -130,13 +127,6 @@ export default function EmotionMonitor({ onDistressChange, active = true }) {
     let busy = false;
 
     async function start() {
-      const ok = await checkDeepfaceHealth();
-      if (cancelled) return;
-      if (!ok) {
-        setStatus('offline');
-        return;
-      }
-
       const waitForVideo = () =>
         new Promise(resolve => {
           const check = () => {
@@ -147,6 +137,7 @@ export default function EmotionMonitor({ onDistressChange, active = true }) {
         });
       await waitForVideo();
 
+      // Start the camera first — always, regardless of DeepFace
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
@@ -157,10 +148,7 @@ export default function EmotionMonitor({ onDistressChange, active = true }) {
         return;
       }
 
-      if (cancelled) {
-        stream.getTracks().forEach(t => t.stop());
-        return;
-      }
+      if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
 
       const video = videoRef.current;
       if (!video) return;
@@ -168,8 +156,15 @@ export default function EmotionMonitor({ onDistressChange, active = true }) {
       video.muted = true;
       video.playsInline = true;
       await video.play();
-
       setStatus('live');
+
+      // DeepFace is optional — if unavailable, camera stays on but no analysis
+      const deepfaceOk = await checkDeepfaceHealth();
+      if (cancelled) return;
+      if (!deepfaceOk) {
+        setStatus('no-analysis');
+        return;
+      }
 
       const tick = async () => {
         if (cancelled || busy) return;
@@ -177,7 +172,7 @@ export default function EmotionMonitor({ onDistressChange, active = true }) {
         try {
           await runAnalysis();
         } catch {
-          if (!cancelled) setStatus('offline');
+          // Analysis failure is silent — camera stays on
         } finally {
           busy = false;
         }
@@ -198,11 +193,9 @@ export default function EmotionMonitor({ onDistressChange, active = true }) {
     };
   }, [active, runAnalysis]);
 
-  if (!isEmotionEnabled() || status === 'offline') return null;
-
   const dominantLabel = faceDetected ? formatEmotionLabel(emotion) : '—';
   const dominantColor = faceDetected ? EMOTION_COLORS[emotion] : '#9C9C9C';
-  const showVideo = status === 'live' || status === 'loading';
+  const showVideo = status === 'live' || status === 'loading' || status === 'no-analysis';
 
   return (
     <Panel>
@@ -223,7 +216,7 @@ export default function EmotionMonitor({ onDistressChange, active = true }) {
             className="w-full h-full object-cover emotion-mirror"
             playsInline
             muted
-            style={{ opacity: status === 'live' ? 1 : 0 }}
+            style={{ opacity: status === 'loading' ? 0 : 1 }}
           />
           <canvas
             ref={overlayRef}
@@ -242,15 +235,13 @@ export default function EmotionMonitor({ onDistressChange, active = true }) {
               <p className="text-white text-sm font-medium">Look at the camera</p>
             </div>
           )}
-        </div>
-      )}
 
-      {status === 'offline' && (
-        <p className="text-sm text-center leading-relaxed mb-2" style={{ color: '#C42B34' }}>
-          Emotion service offline.
-          <br />
-          <span style={{ color: '#9C9C9C' }}>Run: npm run deepface:setup then npm run dev</span>
-        </p>
+          {status === 'no-analysis' && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+              <p className="text-white text-xs" style={{ opacity: 0.7 }}>Analysis unavailable</p>
+            </div>
+          )}
+        </div>
       )}
 
       {status === 'camera-denied' && (
