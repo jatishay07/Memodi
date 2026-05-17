@@ -4,6 +4,8 @@ import {
   ConfirmSignUpCommand,
   InitiateAuthCommand,
   ResendConfirmationCodeCommand,
+  ForgotPasswordCommand,
+  ConfirmForgotPasswordCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
 
 const client = new CognitoIdentityProviderClient({ region: process.env.AWS_REGION || "us-east-1" });
@@ -41,5 +43,21 @@ export async function resendCode(email) {
   return client.send(new ResendConfirmationCodeCommand({
     ClientId: clientId(),
     Username: email,
+  }));
+}
+
+export async function forgotPassword(email) {
+  return client.send(new ForgotPasswordCommand({
+    ClientId: clientId(),
+    Username: email,
+  }));
+}
+
+export async function confirmForgotPassword(email, code, newPassword) {
+  return client.send(new ConfirmForgotPasswordCommand({
+    ClientId: clientId(),
+    Username: email,
+    ConfirmationCode: code,
+    Password: newPassword,
   }));
 }

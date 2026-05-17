@@ -25,24 +25,34 @@ async function request(path, options = {}) {
   return body;
 }
 
+function normalizeEmail(email) {
+  return (email || '').trim().toLowerCase();
+}
+
 // Auth
 export async function registerPatient(data) {
-  return request('/auth/patient/register', { method: 'POST', body: JSON.stringify(data) });
+  return request('/auth/patient/register', { method: 'POST', body: JSON.stringify({ ...data, email: normalizeEmail(data.email) }) });
 }
 export async function loginPatient(data) {
-  return request('/auth/patient/login', { method: 'POST', body: JSON.stringify(data) });
+  return request('/auth/patient/login', { method: 'POST', body: JSON.stringify({ ...data, email: normalizeEmail(data.email) }) });
 }
 export async function registerCaregiver(data) {
-  return request('/auth/caregiver/register', { method: 'POST', body: JSON.stringify(data) });
+  return request('/auth/caregiver/register', { method: 'POST', body: JSON.stringify({ ...data, email: normalizeEmail(data.email) }) });
 }
 export async function loginCaregiver(data) {
-  return request('/auth/caregiver/login', { method: 'POST', body: JSON.stringify(data) });
+  return request('/auth/caregiver/login', { method: 'POST', body: JSON.stringify({ ...data, email: normalizeEmail(data.email) }) });
 }
 export async function verifyEmail(email, code) {
-  return request('/auth/verify', { method: 'POST', body: JSON.stringify({ email, code }) });
+  return request('/auth/verify', { method: 'POST', body: JSON.stringify({ email: normalizeEmail(email), code: (code || '').trim() }) });
 }
 export async function resendVerificationCode(email) {
-  return request('/auth/verify', { method: 'POST', body: JSON.stringify({ email, resend: true }) });
+  return request('/auth/verify', { method: 'POST', body: JSON.stringify({ email: normalizeEmail(email), resend: true }) });
+}
+export async function requestPasswordReset(email) {
+  return request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email: normalizeEmail(email) }) });
+}
+export async function confirmPasswordReset(email, code, newPassword) {
+  return request('/auth/reset-password', { method: 'POST', body: JSON.stringify({ email: normalizeEmail(email), code: code.trim(), newPassword }) });
 }
 
 // Patient API

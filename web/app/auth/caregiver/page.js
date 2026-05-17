@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../lib/auth';
-import { registerCaregiver, loginCaregiver, verifyEmail, resendVerificationCode } from '../../../lib/api';
+import { registerCaregiver, loginCaregiver, verifyEmail, resendVerificationCode, requestPasswordReset, confirmPasswordReset } from '../../../lib/api';
 
 export default function CaregiverAuthPage() {
   const router = useRouter();
@@ -33,6 +33,8 @@ export default function CaregiverAuthPage() {
   const [connectionCode, setConnectionCode] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
 
   async function handleRegister(e) {
     e.preventDefault();
@@ -102,6 +104,94 @@ export default function CaregiverAuthPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleForgotPassword(e) {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      await requestPasswordReset(email);
+      setPendingEmail(email);
+      setStep('reset');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to send reset code. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleResetPassword(e) {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      await confirmPasswordReset(pendingEmail, resetCode, newPassword);
+      setStep('form');
+      setMode('login');
+      setEmail(pendingEmail);
+      setPassword('');
+      setSuccessMsg('Password updated! Sign in with your new password.');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Reset failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (step === 'forgot') {
+    return (
+      <AuthShell>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 36, fontWeight: 400, margin: '0 0 12px', color: '#2D2D2D' }}>
+            Reset password.
+          </h2>
+          <p style={{ fontSize: 15, color: '#6B6B6B', lineHeight: 1.6, margin: 0 }}>
+            Enter your email and we'll send a reset code.
+          </p>
+        </div>
+        {error && <p style={{ color: '#C42B34', fontSize: 14, textAlign: 'center', marginBottom: 16 }}>{error}</p>}
+        <form onSubmit={handleForgotPassword}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <WarmInput placeholder="Email" type="email" value={email} onChange={setEmail} />
+            <button type="submit" disabled={loading || !email} style={{ ...btnStyle('#FC8A2D', '#fff'), marginTop: 8, opacity: (loading || !email) ? 0.45 : 1 }}>
+              {loading ? '…' : 'Send reset code'}
+            </button>
+          </div>
+        </form>
+        <button onClick={() => { setStep('form'); setError(''); }} style={{ width: '100%', textAlign: 'center', fontSize: 13, color: '#9C9C9C', background: 'none', border: 0, cursor: 'pointer', marginTop: 16 }}>
+          Back to sign in
+        </button>
+      </AuthShell>
+    );
+  }
+
+  if (step === 'reset') {
+    return (
+      <AuthShell>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 36, fontWeight: 400, margin: '0 0 12px', color: '#2D2D2D' }}>
+            New password.
+          </h2>
+          <p style={{ fontSize: 15, color: '#6B6B6B', lineHeight: 1.6, margin: 0 }}>
+            Enter the code we sent to <strong style={{ color: '#2D2D2D' }}>{pendingEmail}</strong>
+          </p>
+        </div>
+        {error && <p style={{ color: '#C42B34', fontSize: 14, textAlign: 'center', marginBottom: 16 }}>{error}</p>}
+        <form onSubmit={handleResetPassword}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <WarmInput placeholder="Reset code" value={resetCode} onChange={setResetCode} />
+            <WarmInput placeholder="New password" type="password" value={newPassword} onChange={setNewPassword} />
+            <button type="submit" disabled={loading || !resetCode || newPassword.length < 8} style={{ ...btnStyle('#FC8A2D', '#fff'), marginTop: 8, opacity: (loading || !resetCode || newPassword.length < 8) ? 0.45 : 1 }}>
+              {loading ? '…' : 'Set new password'}
+            </button>
+          </div>
+        </form>
+        <button onClick={() => { setStep('forgot'); setError(''); }} style={{ width: '100%', textAlign: 'center', fontSize: 13, color: '#9C9C9C', background: 'none', border: 0, cursor: 'pointer', marginTop: 16 }}>
+          Resend code
+        </button>
+      </AuthShell>
+    );
   }
 
   if (step === 'verify') {
@@ -189,7 +279,15 @@ export default function CaregiverAuthPage() {
         </div>
       </form>
 
-      <p style={{ textAlign: 'center', fontSize: 13, color: '#9C9C9C', marginTop: 24 }}>
+      {mode === 'login' && (
+        <p style={{ textAlign: 'center', fontSize: 13, marginTop: 12 }}>
+          <button onClick={() => { setStep('forgot'); setError(''); }} style={{ background: 'none', border: 0, color: '#9C9C9C', fontSize: 13, cursor: 'pointer', textDecoration: 'underline' }}>
+            Forgot password?
+          </button>
+        </p>
+      )}
+
+      <p style={{ textAlign: 'center', fontSize: 13, color: '#9C9C9C', marginTop: 16 }}>
         Are you a patient?{' '}
         <a href="/auth/patient" style={{ color: '#FC8A2D', textDecoration: 'none' }}>Sign in here</a>
       </p>
