@@ -106,6 +106,7 @@ export default function ChatPanel({
   textScale = 1,
   reducedMotion = false,
   peopleIndex,
+  eventsIndex,
 }) {
   const scrollRef = useRef(null);
 
@@ -164,6 +165,7 @@ export default function ChatPanel({
               textScale={textScale}
               reducedMotion={reducedMotion}
               peopleIndex={peopleIndex}
+              eventsIndex={eventsIndex}
             />
           )
         ))}

@@ -47,8 +47,8 @@ function buildPeopleIndex(patient) {
       const nickname = (person?.nickname || '').trim();
       const shortName = nickname || fullName.split(/\s+/)[0] || fullName;
       const portrait = person?.photoUrl || null;
-      const description = (person?.story || person?.deceasedMessage || '').trim();
-      if (!shortName || !portrait || !description) return null;
+      const description = (person?.story || person?.deceasedMessage || person?.relationship || '').trim();
+      if (!shortName || !portrait) return null;
 
       const aliases = new Set([shortName, fullName, nickname].filter(Boolean));
       const firstName = fullName.split(/\s+/)[0];
@@ -71,6 +71,17 @@ function buildPeopleIndex(patient) {
     .filter(Boolean);
 
   return new Map(people.map(person => [person.id, person]));
+}
+
+function buildEventsIndex(patient) {
+  return (patient?.upcomingEvents || [])
+    .map((ev, i) => ({
+      id: `event-${i}`,
+      description: (ev?.description || '').trim(),
+      date: (ev?.date || '').trim(),
+      photoUrl: ev?.photoUrl || null,
+    }))
+    .filter(ev => ev.description);
 }
 
 const DEFAULT_COMFORT = {
@@ -105,6 +116,7 @@ export default function PatientPage() {
   const [partialUser, setPartialUser] = useState('');
   const [partialAI, setPartialAI] = useState('');
   const [peopleIndex, setPeopleIndex] = useState(new Map());
+  const [eventsIndex, setEventsIndex] = useState([]);
 
   const phaseRef = useRef('idle');
   const partialAIRef = useRef('');
@@ -223,6 +235,7 @@ export default function PatientPage() {
       .then(data => {
         setPatient(data);
         setPeopleIndex(buildPeopleIndex(data));
+        setEventsIndex(buildEventsIndex(data));
       })
       .catch(() => {
         const fallback = {
@@ -232,6 +245,7 @@ export default function PatientPage() {
         };
         setPatient(fallback);
         setPeopleIndex(buildPeopleIndex(fallback));
+        setEventsIndex([]);
       });
 
     const timer = setInterval(() => setClock(formatClock()), 60000);
@@ -487,6 +501,7 @@ export default function PatientPage() {
             textScale={textScale}
             reducedMotion={reducedMotion}
             peopleIndex={peopleIndex}
+            eventsIndex={eventsIndex}
           />
         </div>
       ) : (

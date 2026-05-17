@@ -1,4 +1,5 @@
 const NAME_RE_CACHE = new WeakMap();
+const EVENT_RE_CACHE = new WeakMap();
 
 export function detectPeopleMentioned(text, peopleIndex) {
   if (!text || !peopleIndex || peopleIndex.size === 0) return [];
@@ -62,4 +63,34 @@ function getAliases(person) {
 
 function escapeRe(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+export function detectEventsMentioned(text, events) {
+  if (!text || !events?.length) return [];
+  const photoed = events.filter(e => e.photoUrl);
+  if (!photoed.length) return [];
+
+  let re = EVENT_RE_CACHE.get(photoed);
+  if (!re) {
+    const keywords = photoed
+      .map(e => e.description.trim().split(/\s+/).filter(w => w.length > 3).slice(0, 4).join('\\s+\\w*\\s*'))
+      .filter(Boolean)
+      .sort((a, b) => b.length - a.length)
+      .map(escapeRe);
+    if (!keywords.length) return [];
+    re = new RegExp(`(${keywords.join('|')})`, 'gi');
+    EVENT_RE_CACHE.set(photoed, re);
+  }
+
+  const found = [];
+  re.lastIndex = 0;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const matched = m[1].toLowerCase();
+    for (const ev of photoed) {
+      const kw = ev.description.trim().split(/\s+/).filter(w => w.length > 3).slice(0, 2).join(' ').toLowerCase();
+      if (!found.includes(ev) && matched.includes(kw.split(' ')[0])) found.push(ev);
+    }
+  }
+  return found;
 }

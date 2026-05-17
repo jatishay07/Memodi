@@ -8,20 +8,7 @@ import { SignInPage, RegisterPage, AuthField } from '../../../components/ui/sign
 
 const HERO = '/hero-fall.jpg';
 
-const TESTIMONIALS = [
-  {
-    avatarSrc: 'https://randomuser.me/api/portraits/women/68.jpg',
-    name: 'Eleanor J.',
-    handle: 'Memodi user',
-    text: "I never feel alone now. Memodi always knows what I need to hear.",
-  },
-  {
-    avatarSrc: 'https://randomuser.me/api/portraits/men/77.jpg',
-    name: 'Robert M.',
-    handle: 'Memodi user',
-    text: "It remembers my family for me. That means the world.",
-  },
-];
+const TESTIMONIALS = [];
 
 const PINK = '#DC4F7C';
 

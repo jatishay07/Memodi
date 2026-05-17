@@ -7,6 +7,7 @@ import Logo from './Logo';
 const NAV_ITEMS = [
   { href: '/patient',       label: 'Dashboard',    icon: '⌂' },
   { href: '/family',        label: 'Memory Lane',  icon: '◎' },
+  { href: '/tracker',       label: 'Find my stuff', icon: '⊕' },
 ];
 
 export default function PatientNav({ onSignOut, onHelp }) {

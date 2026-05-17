@@ -8,20 +8,7 @@ import { SignInPage, RegisterPage, AuthField } from '../../../components/ui/sign
 
 const HERO = '/hero-fall.jpg';
 
-const TESTIMONIALS = [
-  {
-    avatarSrc: 'https://randomuser.me/api/portraits/women/44.jpg',
-    name: 'Sarah L.',
-    handle: 'Caregiver',
-    text: "Memodi gives me peace of mind. I always know how mum is doing.",
-  },
-  {
-    avatarSrc: 'https://randomuser.me/api/portraits/men/36.jpg',
-    name: 'David K.',
-    handle: 'Caregiver',
-    text: "The alerts are calm and clear — it never feels alarming, just helpful.",
-  },
-];
+const TESTIMONIALS = [];
 
 export default function CaregiverAuthPage() {
   const router = useRouter();

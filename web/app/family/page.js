@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import MemoryCard from '../../components/MemoryCard';
 import CaregiverNav from '../../components/CaregiverNav';
@@ -9,6 +9,7 @@ import PatientNav from '../../components/PatientNav';
 import Ambient from '../../components/Ambient';
 import { useAuth } from '../../lib/auth';
 import { getPatient, uploadMemory, deleteMemoryItem, editMemoryItem } from '../../lib/api';
+import PhotoPicker from '../../components/PhotoPicker';
 
 const CATEGORIES = [
   { key: 'people',      label: 'People' },
@@ -73,8 +74,10 @@ export default function FamilyPage() {
   const [mLoc, setMLoc] = useState('');
   const [evDesc, setEvDesc] = useState('');
   const [evDate, setEvDate] = useState('');
+  const [evPhoto, setEvPhoto] = useState(null);
+  const [oPhoto, setOPhoto] = useState(null);
+  const [hPhoto, setHPhoto] = useState(null);
 
-  const photoInputRef = useRef(null);
 
   useEffect(() => {
     if (!ready) return;
@@ -91,20 +94,14 @@ export default function FamilyPage() {
     finally { setLoading(false); }
   }
 
-  function handlePhotoChange(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => setPPhoto(reader.result.split(',')[1]);
-    reader.readAsDataURL(file);
-  }
-
   function resetPerson() {
     setPName(''); setPNick(''); setPRel('daughter'); setPStory('');
     setPDeceased(false); setPDecMsg(''); setPPhoto(null);
   }
 
   // ── Caregiver save functions ──
+
+  function dataUrl(b64) { return b64 ? `data:image/jpeg;base64,${b64}` : null; }
 
   async function savePerson() {
     if (!pName.trim()) return;
@@ -113,8 +110,9 @@ export default function FamilyPage() {
       await uploadMemory(user.patientId, 'person', {
         name: pName.trim(), nickname: pNick.trim() || pName.split(' ')[0],
         relationship: pRel, story: pStory.trim(),
-        isDeceased: pDeceased, deceasedMessage: pDeceased ? pDecMsg.trim() : null
-      }, pPhoto);
+        isDeceased: pDeceased, deceasedMessage: pDeceased ? pDecMsg.trim() : null,
+        photoUrl: dataUrl(pPhoto),
+      });
       await fetchPatient();
       setModal(null); resetPerson();
     } finally { setSaving(false); }
@@ -124,9 +122,11 @@ export default function FamilyPage() {
     if (!oItem.trim() || !oLoc.trim()) return;
     setSaving(true);
     try {
-      await uploadMemory(user.patientId, 'object', { item: oItem.trim(), location: oLoc.trim() });
+      await uploadMemory(user.patientId, 'object', {
+        item: oItem.trim(), location: oLoc.trim(), photoUrl: dataUrl(oPhoto),
+      });
       await fetchPatient();
-      setModal(null); setOItem(''); setOLoc('');
+      setModal(null); setOItem(''); setOLoc(''); setOPhoto(null);
     } finally { setSaving(false); }
   }
 
@@ -155,29 +155,31 @@ export default function FamilyPage() {
 
   function patCloseModal() {
     setPatModal(null); setPatEditing(null);
-    resetPerson(); setOItem(''); setOLoc('');
-    setHText(''); setMName(''); setMTime(''); setMLoc('');
-    setEvDesc(''); setEvDate('');
+    resetPerson(); setOItem(''); setOLoc(''); setOPhoto(null);
+    setHText(''); setHPhoto(null);
+    setMName(''); setMTime(''); setMLoc('');
+    setEvDesc(''); setEvDate(''); setEvPhoto(null);
   }
 
   async function patSavePerson() {
     if (!pName.trim()) return;
     setSaving(true);
     try {
+      const photo = pPhoto ? dataUrl(pPhoto) : (patEditing?.item?.photoUrl || null);
       if (patEditing) {
-        const updated = {
+        await editMemoryItem(user.patientId, 'familyMembers', patEditing.index, {
           name: pName.trim(), nickname: pNick.trim() || pName.split(' ')[0],
           relationship: pRel, story: pStory.trim(),
           isDeceased: pDeceased, deceasedMessage: pDeceased ? pDecMsg.trim() : null,
-          photoUrl: patEditing.item.photoUrl || null,
-        };
-        await editMemoryItem(user.patientId, 'familyMembers', patEditing.index, updated);
+          photoUrl: photo,
+        });
       } else {
         await uploadMemory(user.patientId, 'person', {
           name: pName.trim(), nickname: pNick.trim() || pName.split(' ')[0],
           relationship: pRel, story: pStory.trim(),
           isDeceased: pDeceased, deceasedMessage: pDeceased ? pDecMsg.trim() : null,
-        }, pPhoto);
+          photoUrl: photo,
+        });
       }
       await fetchPatient();
       patCloseModal();
@@ -188,10 +190,12 @@ export default function FamilyPage() {
     if (!oItem.trim() || !oLoc.trim()) return;
     setSaving(true);
     try {
+      const photo = oPhoto ? dataUrl(oPhoto) : (patEditing?.item?.photoUrl || null);
+      const obj = { item: oItem.trim(), location: oLoc.trim(), photoUrl: photo };
       if (patEditing) {
-        await editMemoryItem(user.patientId, 'objects', patEditing.index, { item: oItem.trim(), location: oLoc.trim() });
+        await editMemoryItem(user.patientId, 'objects', patEditing.index, obj);
       } else {
-        await uploadMemory(user.patientId, 'object', { item: oItem.trim(), location: oLoc.trim() });
+        await uploadMemory(user.patientId, 'object', obj);
       }
       await fetchPatient();
       patCloseModal();
@@ -202,10 +206,12 @@ export default function FamilyPage() {
     if (!hText.trim()) return;
     setSaving(true);
     try {
+      const photo = hPhoto ? dataUrl(hPhoto) : (patEditing?.item?.photoUrl || null);
+      const entry = { fact: hText.trim(), photoUrl: photo };
       if (patEditing) {
-        await editMemoryItem(user.patientId, 'lifeHistory', patEditing.index, hText.trim());
+        await editMemoryItem(user.patientId, 'lifeHistory', patEditing.index, entry);
       } else {
-        await uploadMemory(user.patientId, 'lifeHistory', { fact: hText.trim() });
+        await uploadMemory(user.patientId, 'lifeHistory', entry);
       }
       await fetchPatient();
       patCloseModal();
@@ -231,7 +237,8 @@ export default function FamilyPage() {
     if (!evDesc.trim()) return;
     setSaving(true);
     try {
-      const ev = { description: evDesc.trim(), date: evDate.trim() };
+      const photo = evPhoto ? dataUrl(evPhoto) : (patEditing?.item?.photoUrl || null);
+      const ev = { description: evDesc.trim(), date: evDate.trim(), photoUrl: photo };
       if (patEditing) {
         await editMemoryItem(user.patientId, 'upcomingEvents', patEditing.index, ev);
       } else {
@@ -373,26 +380,13 @@ export default function FamilyPage() {
         {/* Person modal */}
         {patModal === 'person' && (
           <PinkModal title={isEditing ? 'Edit person' : 'Add a person'} onClose={patCloseModal}>
-            <input ref={photoInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoChange} />
-            {!isEditing && (
-              <button
-                onClick={() => photoInputRef.current?.click()}
-                style={{
-                  width: '100%', borderRadius: 20, padding: '18px',
-                  border: '2px dashed rgba(220,79,124,0.35)',
-                  background: 'rgba(220,79,124,0.05)',
-                  color: '#DC4F7C', fontSize: 15, cursor: 'pointer',
-                  marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = '#DC4F7C'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(220,79,124,0.35)'; }}
-              >
-                {pPhoto
-                  ? <img src={`data:image/jpeg;base64,${pPhoto}`} alt="" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover' }} />
-                  : <><span style={{ fontSize: 20 }}>⊕</span> Add photo (optional)</>
-                }
-              </button>
-            )}
+            <PhotoPicker
+              value={pPhoto}
+              existingUrl={patEditing?.item?.photoUrl}
+              onChange={setPPhoto}
+              accent="#DC4F7C"
+              shape="round"
+            />
             <PinkInput placeholder="Full name" value={pName} onChange={e => setPName(e.target.value)} />
             <PinkInput placeholder="Nickname" value={pNick} onChange={e => setPNick(e.target.value)} />
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
@@ -454,6 +448,12 @@ export default function FamilyPage() {
         {/* Object modal */}
         {patModal === 'object' && (
           <PinkModal title={isEditing ? 'Edit object' : 'Add an object'} onClose={patCloseModal}>
+            <PhotoPicker
+              value={oPhoto}
+              existingUrl={patEditing?.item?.photoUrl}
+              onChange={setOPhoto}
+              accent="#DC4F7C"
+            />
             <PinkInput placeholder="What is it? (e.g. glasses, keys)" value={oItem} onChange={e => setOItem(e.target.value)} />
             <PinkInput placeholder="Where is it kept?" value={oLoc} onChange={e => setOLoc(e.target.value)} />
             <div style={{ display: 'flex', gap: 12 }}>
@@ -472,6 +472,12 @@ export default function FamilyPage() {
         {/* Life history modal */}
         {patModal === 'history' && (
           <PinkModal title={isEditing ? 'Edit memory' : 'Add a memory'} onClose={patCloseModal}>
+            <PhotoPicker
+              value={hPhoto}
+              existingUrl={patEditing?.item?.photoUrl}
+              onChange={setHPhoto}
+              accent="#DC4F7C"
+            />
             <textarea
               rows={4} placeholder="Share something meaningful — a story, a place, a moment you treasure…"
               value={hText} onChange={e => setHText(e.target.value)}
@@ -512,6 +518,12 @@ export default function FamilyPage() {
         {/* Event modal */}
         {patModal === 'event' && (
           <PinkModal title={isEditing ? 'Edit event' : 'Add an event'} onClose={patCloseModal}>
+            <PhotoPicker
+              value={evPhoto}
+              existingUrl={patEditing?.item?.photoUrl}
+              onChange={setEvPhoto}
+              accent="#DC4F7C"
+            />
             <PinkInput placeholder="What's happening?" value={evDesc} onChange={e => setEvDesc(e.target.value)} />
             <PinkInput placeholder="When? (e.g. Saturday, June 7)" value={evDate} onChange={e => setEvDate(e.target.value)} />
             <div style={{ display: 'flex', gap: 12 }}>
@@ -599,25 +611,12 @@ export default function FamilyPage() {
       {/* Add Person Modal */}
       {modal === 'person' && (
         <MemoryModal title="Add a person" onClose={() => { setModal(null); resetPerson(); }}>
-          <input ref={photoInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoChange} />
-          <button
-            onClick={() => photoInputRef.current?.click()}
-            style={{
-              width: '100%', borderRadius: 20, padding: '18px',
-              border: '2px dashed rgba(252,138,45,0.35)',
-              background: 'rgba(252,138,45,0.05)',
-              color: '#FC8A2D', fontSize: 15, cursor: 'pointer',
-              marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
-              transition: 'border-color .25s',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = '#FC8A2D'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(252,138,45,0.35)'; }}
-          >
-            {pPhoto
-              ? <img src={`data:image/jpeg;base64,${pPhoto}`} alt="" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover' }} />
-              : <><span style={{ fontSize: 20 }}>⊕</span> Add photo (optional)</>
-            }
-          </button>
+          <PhotoPicker
+            value={pPhoto}
+            onChange={setPPhoto}
+            accent="#FC8A2D"
+            shape="round"
+          />
 
           <WarmInput placeholder="Full name" value={pName} onChange={e => setPName(e.target.value)} />
           <WarmInput placeholder="Nickname" value={pNick} onChange={e => setPNick(e.target.value)} />
@@ -684,11 +683,16 @@ export default function FamilyPage() {
 
       {/* Add Object Modal */}
       {modal === 'object' && (
-        <MemoryModal title="Add an object" onClose={() => { setModal(null); setOItem(''); setOLoc(''); }}>
+        <MemoryModal title="Add an object" onClose={() => { setModal(null); setOItem(''); setOLoc(''); setOPhoto(null); }}>
+          <PhotoPicker
+            value={oPhoto}
+            onChange={setOPhoto}
+            accent="#FC8A2D"
+          />
           <WarmInput placeholder="What is it? (e.g. glasses, keys)" value={oItem} onChange={e => setOItem(e.target.value)} />
           <WarmInput placeholder="Where is it kept?" value={oLoc} onChange={e => setOLoc(e.target.value)} />
           <div style={{ display: 'flex', gap: 12 }}>
-            <button onClick={() => { setModal(null); setOItem(''); setOLoc(''); }} style={ghostBtn}>Cancel</button>
+            <button onClick={() => { setModal(null); setOItem(''); setOLoc(''); setOPhoto(null); }} style={ghostBtn}>Cancel</button>
             <button
               onClick={saveObject}
               disabled={!oItem.trim() || !oLoc.trim() || saving}

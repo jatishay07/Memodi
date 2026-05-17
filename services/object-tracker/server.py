@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-MODEL_NAME = os.environ.get("TRACKER_MODEL", "yolo26n.pt")
+MODEL_NAME = os.environ.get("TRACKER_MODEL", "yolo11n.pt")
 FALLBACK_MODEL_NAME = os.environ.get("TRACKER_FALLBACK_MODEL", "yolo11n.pt")
 WORLD_MODEL_NAME = os.environ.get("TRACKER_WORLD_MODEL", "yolov8s-world.pt")
 CONFIDENCE = float(os.environ.get("TRACKER_CONF", "0.25"))
@@ -21,7 +21,7 @@ TRACKER_ALGORITHM = os.environ.get("TRACKER_ALGORITHM", "bytetrack.yaml")
 app = FastAPI(title="Memodi Object Tracker")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.environ.get("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(","),
+    allow_origins=["*"],
     allow_methods=["POST", "GET", "OPTIONS"],
     allow_headers=["*"],
 )
