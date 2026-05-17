@@ -9,7 +9,7 @@ export default function Logo({ iconSize = 36, textSize = 22, gap = 8, stacked = 
       gap,
     }}>
       <img
-        src="/logo.png"
+        src="/logo-transparent.png"
         alt="Memodi logo"
         style={{ width: iconSize, height: iconSize, objectFit: 'contain', display: 'block' }}
       />
