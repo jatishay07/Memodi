@@ -138,6 +138,25 @@ export async function updatePatientField(patientId, field, value) {
   }));
 }
 
+export async function deleteFromPatientList(patientId, field, index) {
+  await ddb.send(new UpdateCommand({
+    TableName: PATIENTS_TABLE(),
+    Key: { patientId },
+    UpdateExpression: `REMOVE #f[${index}]`,
+    ExpressionAttributeNames: { "#f": field },
+  }));
+}
+
+export async function updatePatientListItem(patientId, field, index, newItem) {
+  await ddb.send(new UpdateCommand({
+    TableName: PATIENTS_TABLE(),
+    Key: { patientId },
+    UpdateExpression: `SET #f[${index}] = :item`,
+    ExpressionAttributeNames: { "#f": field },
+    ExpressionAttributeValues: { ":item": newItem },
+  }));
+}
+
 export async function scanAllPatients() {
   const result = await ddb.send(new ScanCommand({ TableName: PATIENTS_TABLE() }));
   return result.Items ?? [];

@@ -185,6 +185,18 @@ functions:
       - httpApi:
           path: /voice/text
           method: POST
+  manageMemoryDelete:
+    handler: lambda/manageMemory/index.handler
+    events:
+      - httpApi:
+          path: /memory/delete
+          method: POST
+  manageMemoryEdit:
+    handler: lambda/manageMemory/index.handler
+    events:
+      - httpApi:
+          path: /memory/edit
+          method: POST
   getScheduledMessage:
     handler: lambda/getScheduledMessage/index.handler
     timeout: 60

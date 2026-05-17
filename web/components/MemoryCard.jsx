@@ -1,6 +1,6 @@
 'use client';
 
-export default function MemoryCard({ type, data }) {
+export default function MemoryCard({ type, data, onEdit, onDelete }) {
   const cardStyle = {
     borderRadius: 20, overflow: 'hidden',
     background: 'rgba(255,255,255,0.75)',
@@ -10,12 +10,56 @@ export default function MemoryCard({ type, data }) {
     marginBottom: 16,
     padding: '18px 20px',
     transition: 'transform .3s ease, box-shadow .3s ease',
+    position: 'relative',
   };
+
+  const actions = (onEdit || onDelete) ? (
+    <div style={{
+      position: 'absolute', top: 12, right: 14,
+      display: 'flex', gap: 6,
+    }}>
+      {onEdit && (
+        <button
+          onClick={onEdit}
+          title="Edit"
+          style={{
+            width: 30, height: 30, borderRadius: 999, border: 0,
+            background: 'rgba(220,79,124,0.10)',
+            color: '#DC4F7C', fontSize: 13, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'background .2s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(220,79,124,0.20)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(220,79,124,0.10)'; }}
+        >
+          ✎
+        </button>
+      )}
+      {onDelete && (
+        <button
+          onClick={onDelete}
+          title="Delete"
+          style={{
+            width: 30, height: 30, borderRadius: 999, border: 0,
+            background: 'rgba(196,43,52,0.08)',
+            color: '#C42B34', fontSize: 14, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'background .2s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(196,43,52,0.18)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(196,43,52,0.08)'; }}
+        >
+          ×
+        </button>
+      )}
+    </div>
+  ) : null;
 
   if (type === 'person') {
     return (
       <div style={cardStyle}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+        {actions}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, paddingRight: actions ? 72 : 0 }}>
           {data.photoUrl ? (
             <img
               src={data.photoUrl} alt={data.name}
@@ -66,7 +110,8 @@ export default function MemoryCard({ type, data }) {
   if (type === 'object') {
     return (
       <div style={cardStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        {actions}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingRight: actions ? 72 : 0 }}>
           <div style={{
             width: 44, height: 44, borderRadius: 14,
             background: 'rgba(252,138,45,0.15)',
@@ -88,7 +133,8 @@ export default function MemoryCard({ type, data }) {
   if (type === 'medication') {
     return (
       <div style={cardStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        {actions}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingRight: actions ? 72 : 0 }}>
           <div style={{
             width: 44, height: 44, borderRadius: 14,
             background: 'rgba(158,152,32,0.15)',
@@ -110,7 +156,8 @@ export default function MemoryCard({ type, data }) {
   if (type === 'event') {
     return (
       <div style={cardStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        {actions}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingRight: actions ? 72 : 0 }}>
           <div style={{
             width: 44, height: 44, borderRadius: 14,
             background: 'rgba(220,79,124,0.12)',
@@ -131,7 +178,8 @@ export default function MemoryCard({ type, data }) {
 
   return (
     <div style={cardStyle}>
-      <p style={{ fontSize: 15, color: '#6B6B6B', lineHeight: 1.6, margin: 0 }}>
+      {actions}
+      <p style={{ fontSize: 15, color: '#6B6B6B', lineHeight: 1.6, margin: 0, paddingRight: actions ? 72 : 0 }}>
         {typeof data === 'string' ? data : JSON.stringify(data)}
       </p>
     </div>

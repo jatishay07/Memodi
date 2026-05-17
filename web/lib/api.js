@@ -80,6 +80,12 @@ export async function getPatient(patientId) {
 export async function uploadMemory(patientId, memoryType, data, photoBase64 = null) {
   return request('/memory', { method: 'POST', body: JSON.stringify({ patientId, memoryType, data, photoBase64 }) });
 }
+export async function deleteMemoryItem(patientId, field, index) {
+  return request('/memory/delete', { method: 'POST', body: JSON.stringify({ patientId, field, index }) });
+}
+export async function editMemoryItem(patientId, field, index, item) {
+  return request('/memory/edit', { method: 'POST', body: JSON.stringify({ patientId, field, index, item }) });
+}
 export async function identifyPhoto(patientId, photoBase64) {
   return request('/identify', { method: 'POST', body: JSON.stringify({ patientId, photoBase64 }) });
 }
