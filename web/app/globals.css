@@ -202,6 +202,10 @@ input, textarea, select, button { font-family: var(--font-sans); }
 .anim-drift  { animation: drift  var(--dur-blob)   var(--ease-breath) infinite; }
 .anim-float  { animation: floatUp 5s var(--ease-breath) infinite; }
 
+.emotion-mirror {
+  transform: scaleX(-1);
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar        { width: 4px; }
 ::-webkit-scrollbar-track  { background: transparent; }

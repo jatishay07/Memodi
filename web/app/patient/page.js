@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Mic } from 'lucide-react';
 import Orb from '../../components/Orb';
+import EmotionMonitor from '../../components/EmotionMonitor';
 import Ambient from '../../components/Ambient';
 import PatientNav from '../../components/PatientNav';
 import { useAuth } from '../../lib/auth';
@@ -35,11 +36,16 @@ export default function PatientPage() {
   const [patient, setPatient] = useState(null);
   const [response, setResponse] = useState('');
   const [textScale, setTextScale] = useState(1);
-  const [clock, setClock] = useState(formatClock());
+  const [clock, setClock] = useState(null);
   const [error, setError] = useState('');
+  const [emotionDistress, setEmotionDistress] = useState(false);
   const audioRef = useRef(null);
 
   useEffect(() => setMounted(true), []);
+
+  const handleEmotionDistress = useCallback(distressed => {
+    setEmotionDistress(distressed);
+  }, []);
 
   useEffect(() => {
     if (!ready) return;
@@ -107,6 +113,8 @@ export default function PatientPage() {
   const name = patient?.nickname || patient?.name?.split(' ')[0] || user?.name?.split(' ')[0] || '';
   const hint = isProcessing ? "I'm thinking…" : isRecording ? 'Listening…' : 'Tap to speak with me';
   const micActive = isRecording;
+  const displayOrbState =
+    orbState === 'idle' && emotionDistress ? 'distress' : orbState;
 
   return (
     <div style={{
@@ -128,9 +136,9 @@ export default function PatientPage() {
           </p>
         )}
         <p style={{ fontFamily: 'var(--font-serif)', fontSize: 28, color: '#2D2D2D', margin: '2px 0 0', fontWeight: 400 }}>
-          {clock.time}
+          {clock?.time}
         </p>
-        <p style={{ fontSize: 13, color: '#9C9C9C', margin: 0 }}>{clock.day}</p>
+        <p style={{ fontSize: 13, color: '#9C9C9C', margin: 0 }}>{clock?.day}</p>
       </div>
 
       {/* Main content */}
@@ -149,7 +157,7 @@ export default function PatientPage() {
             transition: 'transform .8s ease',
             transform: response ? 'translateX(-80px) scale(0.75)' : 'translateX(0) scale(1)',
           }}>
-            <Orb state={orbState} size={response ? 260 : 320} />
+            <Orb state={displayOrbState} size={response ? 260 : 320} />
           </div>
 
           {/* Response card */}
@@ -228,6 +236,8 @@ export default function PatientPage() {
           </div>
         )}
       </div>
+
+      <EmotionMonitor active onDistressChange={handleEmotionDistress} />
     </div>
   );
 }
