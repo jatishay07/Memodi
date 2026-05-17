@@ -266,6 +266,33 @@ input, textarea, select, button { font-family: var(--font-sans); }
 ::-webkit-scrollbar-track  { background: transparent; }
 ::-webkit-scrollbar-thumb  { background: rgba(45,45,45,0.15); border-radius: 2px; }
 
+/* ── Patient onboarding + comfort ── */
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes buttonBreathe {
+  0%, 100% { transform: scale(1);     box-shadow: 0 8px 32px rgba(220,79,124,0.30); }
+  50%       { transform: scale(1.025); box-shadow: 0 12px 44px rgba(220,79,124,0.44); }
+}
+@keyframes bubbleFloat {
+  /* Uses standalone `translate` so it composes with `transform` centering offsets */
+  0%, 100% { translate: 0 0px; }
+  50%       { translate: 0 -4px; }
+}
+@keyframes comfortTrayIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+@keyframes lightBloom {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50%       { opacity: 1;    transform: scale(1.06); }
+}
+@keyframes responseFadeIn {
+  from { opacity: 0; transform: translateX(32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
   .anim-breath, .anim-drift, .anim-float { animation: none; }
