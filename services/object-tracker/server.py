@@ -246,18 +246,14 @@ def set_targets(req: TargetsRequest):
         target_name = detected_class_name
         target_mode = "class"
         message = f"Detected '{target_name}' in the target photo. Live tracking will follow that Ultralytics class."
-    elif requested_name and requested_name.lower() != TARGET_LABEL:
-        _load_world_model(requested_name)
+    else:
+        fallback_name = requested_name if requested_name and requested_name.lower() != TARGET_LABEL else "object"
+        _load_world_model(fallback_name)
         target_class_id = 0
-        target_name = requested_name
+        target_name = fallback_name
         target_mode = "world"
         detected_confidence = 0.0
         message = f"Could not identify a COCO class in the photo, so live tracking will use YOLO-World for '{target_name}'."
-    else:
-        raise HTTPException(
-            status_code=422,
-            detail="Ultralytics could not detect a trackable object in the target photo. Type an object label like phone, keys, wallet, bottle, remote, or person, then upload/capture again.",
-        )
 
     tracks = {}
     next_track_id = 1

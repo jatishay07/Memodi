@@ -57,7 +57,7 @@ export default function ObjectTrackerPage() {
   const [service, setService] = useState(null);
   const [status, setStatus] = useState('checking');
   const [message, setMessage] = useState('Checking object tracker service...');
-  const [targetName, setTargetName] = useState('target');
+  const [targetName, setTargetName] = useState('');
   const [targetFiles, setTargetFiles] = useState([]);
   const [targetReady, setTargetReady] = useState(false);
   const [cameraLive, setCameraLive] = useState(false);
@@ -124,7 +124,7 @@ export default function ObjectTrackerPage() {
       setStatus(data.status === 'missing-dependencies' ? 'offline' : 'ready');
       setMessage(data.status === 'missing-dependencies'
         ? 'Tracker dependencies are missing. Run npm run tracker:setup, then npm run tracker:up.'
-        : 'Upload a picture, or take a target photo with the camera.');
+        : 'Type what to find, then upload a picture or take a target photo.');
     } catch {
       setService({ status: 'offline' });
       setStatus('offline');
@@ -170,7 +170,7 @@ export default function ObjectTrackerPage() {
     if (!files.length) return;
     setTargetPreview(URL.createObjectURL(files[0]));
     const targets = await Promise.all(files.map(async file => ({
-      name: targetName || file.name.replace(/\.[^.]+$/, '') || 'target',
+      name: targetName.trim() || file.name.replace(/\.[^.]+$/, '') || 'object',
       imageBase64: await fileToBase64(file),
     })));
     await uploadTargets(targets, files);
@@ -254,8 +254,8 @@ export default function ObjectTrackerPage() {
     }
     setTargetPreview(`data:image/jpeg;base64,${frame.imageBase64}`);
     await uploadTargets(
-      [{ name: targetName || 'target', imageBase64: frame.imageBase64 }],
-      [{ name: `${targetName || 'target'} camera frame`, size: Math.round((frame.imageBase64.length * 3) / 4) }],
+      [{ name: targetName.trim() || 'object', imageBase64: frame.imageBase64 }],
+      [{ name: `${targetName.trim() || 'object'} camera frame`, size: Math.round((frame.imageBase64.length * 3) / 4) }],
     );
   };
 
@@ -314,7 +314,7 @@ export default function ObjectTrackerPage() {
 
             <label style={{ display: 'block', marginBottom: 16 }}>
               <span style={{ display: 'block', fontSize: 13, color: '#6B6B6B', fontWeight: 800, marginBottom: 8 }}>Object label</span>
-              <input value={targetName} onChange={event => setTargetName(event.target.value)} placeholder="phone, key, wallet..." style={{ width: '100%', border: '1px solid rgba(45,45,45,0.12)', borderRadius: 18, padding: '13px 14px', background: 'rgba(255,255,255,0.72)', outline: 'none', color: '#2D2D2D', fontWeight: 700 }} />
+              <input value={targetName} onChange={event => setTargetName(event.target.value)} placeholder="phone, keys, wallet..." style={{ width: '100%', border: '1px solid rgba(45,45,45,0.12)', borderRadius: 18, padding: '13px 14px', background: 'rgba(255,255,255,0.72)', outline: 'none', color: '#2D2D2D', fontWeight: 700 }} />
             </label>
 
             <label style={{ display: 'grid', placeItems: 'center', minHeight: 152, padding: 18, borderRadius: 24, border: '2px dashed rgba(220,79,124,0.34)', background: 'rgba(255,255,255,0.44)', cursor: 'pointer', textAlign: 'center' }}>
