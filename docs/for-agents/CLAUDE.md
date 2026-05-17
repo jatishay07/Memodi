@@ -1,57 +1,30 @@
-# Agent Guide (Claude / Cursor / etc.)
+# Agent Guide
 
-Entry point for AI agents working on **Memodi**.
+Entry: [rebuild-from-scratch.md](rebuild-from-scratch.md) → [api-reference.md](api-reference.md) → [codebase-map.md](codebase-map.md).
 
-## Read order
+## Locked decisions
 
-1. [rebuild-from-scratch.md](rebuild-from-scratch.md)
-2. [api-reference.md](api-reference.md)
-3. [codebase-map.md](codebase-map.md)
-4. [implementation-checklist.md](implementation-checklist.md)
-
-Architecture: [../architecture/](../architecture/). Decisions: [../decisions/OPEN_QUESTIONS.md](../decisions/OPEN_QUESTIONS.md) (all resolved).
-
-## Resolved decisions (do not re-litigate)
-
-| Topic | v1 choice |
-|-------|-----------|
-| API auth | Client-only; no backend JWT verify |
-| S3 / Rekognition | Manual AWS setup |
-| `/family` | Caregivers only |
-| Patient signup | email, password, name, timezone |
-| Caregivers | One per patient; code required at signup |
-| Deploy | `us-east-1`, single stage |
-| Compliance | Prototype; not HIPAA-compliant (see README) |
+| Topic | Choice |
+|-------|--------|
+| API auth | Client-only JWT |
+| Patient voice | Web Speech → `/voice/text` → Agent → Piper |
+| Linking | 6-digit code, 15 min, `/patient/generate-code`, `/connect?code=` |
+| Caregiver register | `connectionCode` required; links on success |
+| S3 | In serverless.yml |
+| Rekognition | Manual `memodi-faces` |
 
 ## Hard rules
 
-- Never hardcode `PATIENT_ID` — use `memodi_auth.patientId`
-- Never commit `.env.local` or secrets
-- ES modules in `lambda/`
-- Send `Authorization: Bearer` on core API calls
+- Use `user.patientId` from session — never hardcode patient IDs
+- Patient path: `sendTextInput` + `synthesizeWithPiper`, not `sendVoiceInput`
 - Do not invent API fields outside `api-reference.md`
-- Block patients from `/family` in middleware
-- Do not add S3/Rekognition to serverless.yml unless user explicitly changes Q2
+- `cd lambda && npm install` before deploy
 
-## Session
+## Known gaps
 
-`localStorage.memodi_auth` — see [auth-and-sessions.md](../architecture/auth-and-sessions.md).
+- No `middleware.js` for role guards
+- No backend JWT verification
 
-## Routes
+## Local dev
 
-| Path | Role |
-|------|------|
-| `/auth/patient`, `/auth/caregiver` | Public |
-| `/patient` | patient |
-| `/family` | caregiver |
-| `/caregiver` | caregiver |
-
-## Known gaps to implement
-
-1. Next.js pages under `web/app/`
-2. `middleware.js` role guards
-3. Post-hackathon: `lambda/shared/auth.js` + JWT verify
-
-## Related
-
-- [../for-humans/design-system.md](../for-humans/design-system.md)
+`npm run dev` from repo root (Piper required for patient audio).

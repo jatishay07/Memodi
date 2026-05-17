@@ -1,92 +1,72 @@
 # Operations
 
-Runbook for deploying and developing Memodi.
-
-> Memodi is a prototype built for demonstration purposes and is not HIPAA-compliant.
+> Prototype — not HIPAA-compliant.
 
 ## Prerequisites
 
 - Node.js 18+
-- AWS account, CLI configured for **us-east-1**
+- AWS CLI (`us-east-1`)
 - Serverless Framework 3
-- Bedrock access for Claude Sonnet 4 in `us-east-1`
+- Bedrock **Agent** + **Nova Lite** enabled in `us-east-1`
+- Python 3.12+ for Piper / DeepFace venvs (local)
 
-## One-time AWS setup (manual)
+## One-time AWS setup
 
-Before voice, photos, or face features work:
+**S3** is created by `serverless deploy` — do not pre-create `memodi-photos` or `memodi-voice-recordings`.
+
+**Manual:**
 
 ```bash
-aws s3 mb s3://memodi-photos --region us-east-1
-aws s3 mb s3://memodi-voice-recordings --region us-east-1
 aws rekognition create-collection --collection-id memodi-faces --region us-east-1
 aws sns create-topic --name memodi-caregiver-alerts --region us-east-1
 ```
 
-Subscribe email/SMS to the SNS topic. Not managed in `serverless.yml` for v1.
+Subscribe to the SNS topic. Confirm Bedrock Agent `TIZBKTXHVL` (or your ID in `serverless.yml`) is deployed.
 
-## Environment variables
-
-### Deploy (shell)
+## Deploy
 
 ```bash
-export JWT_SECRET="<strong-random-secret>"
-export SNS_CAREGIVER_TOPIC_ARN="arn:aws:sns:us-east-1:ACCOUNT:memodi-caregiver-alerts"
-```
-
-### Frontend (`web/.env.local` — do not commit)
-
-```
-NEXT_PUBLIC_API_BASE_URL=https://xxxxxxxx.execute-api.us-east-1.amazonaws.com
-```
-
-## Deploy backend
-
-Single stage, `us-east-1`:
-
-```bash
-npm install
+cd lambda && npm install && cd ..
+export JWT_SECRET="..."
+export SNS_CAREGIVER_TOPIC_ARN="arn:aws:sns:..."
 npm run deploy
 ```
 
-No staging/prod split required for hackathon. Optional: `npm run deploy:dev` for a named stage in the same account.
+## Frontend env (`web/.env.local`)
 
-## Run frontend
+```
+NEXT_PUBLIC_API_BASE_URL=https://....execute-api.us-east-1.amazonaws.com
+NEXT_PUBLIC_PIPER_URL=http://127.0.0.1:59125
+NEXT_PUBLIC_DEEPFACE_URL=http://127.0.0.1:59126
+NEXT_PUBLIC_EMOTION_ENABLED=true
+```
+
+## Local dev
 
 ```bash
-cd web
-npm install
 npm run dev
 ```
 
-## Seed data
+Starts Piper (required), DeepFace (if venv exists), Next.js on :3000.
 
-Prefer `POST /auth/patient/register` for realistic auth flows.
-
-Manual DynamoDB seed shape: [data-model.md](../architecture/data-model.md#seed-data-example).
-
-## Commands
-
-| Task | Command |
-|------|---------|
-| Voice logs | `npm run logs:voice` |
-| Remove stack | `npm run remove` |
-| Build web | `cd web && npm run build` |
+| Command | Purpose |
+|---------|---------|
+| `npm run piper:up` | TTS only |
+| `npm run deepface:up` | Emotion only |
+| `npm run logs:voice` | Legacy voice Lambda logs |
 
 ## Troubleshooting
 
 | Issue | Check |
 |-------|--------|
-| CORS | API URL in `.env.local`, no trailing slash |
-| Mic | HTTPS or localhost; browser permission |
-| Voice timeout | S3 voice bucket exists; Lambda logs |
-| Transcribe fail | Bucket + IAM S3 write |
+| Piper failed on `npm run dev` | Voice `.onnx` in `services/piper-tts/voices/` |
+| Agent error on chat | `processTextInput` logs; if Bedrock returns access denied, update the Bedrock agent execution role to allow the inference profile and its backing foundation models in every routed region |
+| Code expired (410) | Patient regenerates code on `/patient` |
+| Patient already has caregiver (409) | One caregiver per patient |
+| Legacy `/voice` 500 | Check `BEDROCK_MODEL_ID`, `invokeClaude`, and Bedrock permissions |
 | Rekognition warn | Collection `memodi-faces` exists |
-| 404 patient | Session `patientId` matches DynamoDB |
-| Alerts not received | SNS ARN set; topic subscribed |
 
-**Security note:** APIs do not validate JWT in v1. Do not expose API URL publicly without understanding the risk. Add backend auth post-hackathon.
-
-## Related docs
+## Related
 
 - [aws-infrastructure.md](../architecture/aws-infrastructure.md)
-- [implementation-checklist.md](../for-agents/implementation-checklist.md)
+- [local-dev-services.md](../architecture/local-dev-services.md)

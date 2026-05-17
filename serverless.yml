@@ -30,6 +30,7 @@ provider:
     DYNAMODB_CAREGIVERS_TABLE: memodi-caregivers
     S3_PHOTOS_BUCKET: memodi-photos
     S3_VOICE_BUCKET: memodi-voice-recordings
+    BEDROCK_MODEL_ID: anthropic.claude-sonnet-4-20250514
     BEDROCK_AGENT_ID: TIZBKTXHVL
     BEDROCK_AGENT_ALIAS_ID: TSTALIASID
     SNS_CAREGIVER_TOPIC_ARN: ${env:SNS_CAREGIVER_TOPIC_ARN}
