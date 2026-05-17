@@ -138,6 +138,23 @@ export async function updatePatientField(patientId, field, value) {
   }));
 }
 
+export async function setConnectionCode(patientId, code, expiresAt) {
+  await ddb.send(new UpdateCommand({
+    TableName: PATIENTS_TABLE(),
+    Key: { patientId },
+    UpdateExpression: "SET connectionCode = :c, connectionCodeExpiresAt = :e",
+    ExpressionAttributeValues: { ":c": code, ":e": expiresAt },
+  }));
+}
+
+export async function clearConnectionCode(patientId) {
+  await ddb.send(new UpdateCommand({
+    TableName: PATIENTS_TABLE(),
+    Key: { patientId },
+    UpdateExpression: "REMOVE connectionCode, connectionCodeExpiresAt",
+  }));
+}
+
 export async function deleteFromPatientList(patientId, field, index) {
   await ddb.send(new UpdateCommand({
     TableName: PATIENTS_TABLE(),

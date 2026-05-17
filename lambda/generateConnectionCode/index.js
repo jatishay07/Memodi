@@ -1,4 +1,4 @@
-import { getPatient, updatePatientField } from "../shared/dynamodb.js";
+import { getPatient, setConnectionCode } from "../shared/dynamodb.js";
 
 const CORS = {
   "Content-Type": "application/json",
@@ -30,10 +30,7 @@ export const handler = async (event) => {
     const code = String(Math.floor(100000 + Math.random() * 900000));
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
-    await Promise.all([
-      updatePatientField(patientId, "connectionCode", code),
-      updatePatientField(patientId, "connectionCodeExpiresAt", expiresAt),
-    ]);
+    await setConnectionCode(patientId, code, expiresAt);
 
     return respond(200, { code, expiresAt });
   } catch (err) {

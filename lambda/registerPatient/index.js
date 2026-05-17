@@ -2,6 +2,8 @@ import { v4 as uuidv4 } from "uuid";
 import { getPatientByEmail, putPatient } from "../shared/dynamodb.js";
 import { signUpUser, resendCode } from "../shared/cognito.js";
 
+const CODE_TTL_MS = 15 * 60 * 1000;
+
 const CORS = {
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
@@ -54,11 +56,13 @@ export const handler = async (event) => {
   const existing = await getPatientByEmail(email);
   const patientId = existing?.patientId || `patient-${uuidv4()}`;
   const connectionCode = existing?.connectionCode || generateConnectionCode();
+  const connectionCodeExpiresAt = new Date(Date.now() + CODE_TTL_MS).toISOString();
 
   await putPatient({
     patientId,
     email,
     connectionCode,
+    connectionCodeExpiresAt,
     name,
     nickname: name.split(" ")[0],
     caregiverId: null,

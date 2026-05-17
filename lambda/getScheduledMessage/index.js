@@ -1,5 +1,5 @@
 import { scanAllPatients, saveInteraction } from "../shared/dynamodb.js";
-import { invokeClaude } from "../shared/bedrock.js";
+import { invokeAgent } from "../shared/bedrock.js";
 import { synthesizeSpeech } from "../shared/polly.js";
 import { v4 as uuidv4 } from "uuid";
 
@@ -29,10 +29,9 @@ export const handler = async () => {
       if (!isWithin7Minutes(entry.time, currentTime)) continue;
 
       try {
-        const responseText = await invokeClaude(
-          `You are Memodi, a warm companion for ${patient.name}. Say this scheduled message warmly and naturally in 1-2 sentences: "${entry.message}"`,
-          `It is ${currentTime} and time for: ${entry.activity}`,
-          128
+        const responseText = await invokeAgent(
+          patient.patientId,
+          `You are Memodi, a warm companion for ${patient.name}. It is ${currentTime} and time for: ${entry.activity}. Say this scheduled message warmly and naturally in 1-2 sentences: "${entry.message}"`
         );
 
         const audioBase64 = await synthesizeSpeech(responseText);

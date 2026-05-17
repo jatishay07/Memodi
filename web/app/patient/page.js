@@ -191,7 +191,7 @@ export default function PatientPage() {
       setOrbState(result.isDistressed ? 'distress' : 'speaking');
       setResponse(result.response);
 
-      // TTS is optional — only available when Piper is running locally
+      // TTS: try Piper first, fall back to browser speechSynthesis
       try {
         if (audioRef.current) audioRef.current.pause();
         const { audioBase64, mimeType } = await synthesizeWithPiper(result.response);
@@ -199,7 +199,17 @@ export default function PatientPage() {
         audioRef.current = audio;
         audio.onended = () => setOrbState('idle');
       } catch {
-        setOrbState('idle');
+        if (typeof window !== 'undefined' && window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+          const utt = new SpeechSynthesisUtterance(result.response);
+          utt.rate = 0.92;
+          utt.pitch = 1.05;
+          utt.onend = () => setOrbState('idle');
+          utt.onerror = () => setOrbState('idle');
+          window.speechSynthesis.speak(utt);
+        } else {
+          setOrbState('idle');
+        }
       }
     } catch (err) {
       console.error(err);

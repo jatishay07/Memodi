@@ -22,6 +22,6 @@ export const handler = async (event) => {
   if (!patient) return respond(404, { error: "Patient not found" });
 
   // Strip auth fields before returning
-  const { hashedPassword, connectionCode, ...safePatient } = patient;
+  const { hashedPassword, connectionCode, connectionCodeExpiresAt, ...safePatient } = patient;
   return respond(200, safePatient);
 };

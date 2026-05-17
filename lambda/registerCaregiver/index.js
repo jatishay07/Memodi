@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import {
   getCaregiverByEmail, putCaregiver,
-  getPatientByConnectionCode, updatePatientField,
+  getPatientByConnectionCode, updatePatientField, clearConnectionCode,
 } from "../shared/dynamodb.js";
 import { signUpUser, resendCode } from "../shared/cognito.js";
 
@@ -77,8 +77,7 @@ export const handler = async (event) => {
   // Link patient → caregiver and consume the code so it can't be reused
   await Promise.all([
     updatePatientField(patient.patientId, "caregiverId", caregiverId),
-    updatePatientField(patient.patientId, "connectionCode", null),
-    updatePatientField(patient.patientId, "connectionCodeExpiresAt", null),
+    clearConnectionCode(patient.patientId),
   ]);
 
   return respond(201, {

@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import {
   getPatientByConnectionCode, getCaregiver,
-  updatePatientField, updateCaregiverField,
+  updatePatientField, updateCaregiverField, clearConnectionCode,
 } from "../shared/dynamodb.js";
 
 const CORS = {
@@ -39,13 +39,15 @@ export const handler = async (event) => {
     if (!patient.connectionCodeExpiresAt || new Date(patient.connectionCodeExpiresAt) < new Date()) {
       return respond(410, { error: "Code has expired. Ask your patient to generate a new one." });
     }
+    if (patient.caregiverId) {
+      return respond(409, { error: "This patient already has a caregiver connected." });
+    }
 
     // Link both records and clear the one-time code
     await Promise.all([
       updateCaregiverField(caregiverId, "linkedPatientId", patient.patientId),
       updatePatientField(patient.patientId, "caregiverId", caregiverId),
-      updatePatientField(patient.patientId, "connectionCode", null),
-      updatePatientField(patient.patientId, "connectionCodeExpiresAt", null),
+      clearConnectionCode(patient.patientId),
     ]);
 
     const token = jwt.sign(

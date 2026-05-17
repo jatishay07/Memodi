@@ -38,7 +38,7 @@ function buildMemorySummary(patient, nickname) {
   if (people.length) {
     const peopleStr = people
       .filter(p => p.name || p.relationship)
-      .map(p => [p.name, p.relationship, p.notes].filter(Boolean).join(" — "))
+      .map(p => [p.name, p.relationship, p.story].filter(Boolean).join(" — "))
       .join("; ");
     if (peopleStr) lines.push(`People ${nickname} knows: ${peopleStr}`);
   }
@@ -46,10 +46,10 @@ function buildMemorySummary(patient, nickname) {
     lines.push(`Things ${nickname} has shared: ${history.slice(-20).join("; ")}`);
   }
   if (objects.length) {
-    lines.push(`Familiar objects: ${objects.map(o => o.name || o).join(", ")}`);
+    lines.push(`Familiar objects: ${objects.map(o => o.item ? `${o.item} (${o.location})` : String(o)).join(", ")}`);
   }
   if (events.length) {
-    lines.push(`Upcoming events: ${events.map(e => e.title || e).join(", ")}`);
+    lines.push(`Upcoming events: ${events.map(e => e.description ? `${e.description}${e.date ? ` on ${e.date}` : ""}` : String(e)).join(", ")}`);
   }
   return lines.length ? lines.join("\n") : null;
 }
@@ -101,9 +101,11 @@ Respond in 1-3 warm, short sentences. Be specific to what they said. Reference t
     const extractionPrompt = `Extract memorable facts from what ${nickname} said. Return JSON only:
 {
   "people": [{"name": "string or null", "relationship": "string or null"}],
-  "facts": ["short fact about their life, preferences, or experiences"]
+  "facts": ["short fact about their life, preferences, or experiences"],
+  "events": [{"description": "string", "date": "string or null"}]
 }
 Only include entries where something was clearly stated. Empty arrays if nothing to extract.
+For events, include appointments, visits, plans, or anything time-bound mentioned.
 ${nickname} said: "${text}"`;
 
     const [responseText, extracted] = await Promise.all([
@@ -132,6 +134,17 @@ ${nickname} said: "${text}"`;
         const alreadyKnown = (patient.lifeHistory ?? []).some(h => h === fact);
         if (!alreadyKnown) {
           memoryUpdates.push(appendToPatientList(patientId, "lifeHistory", fact));
+        }
+      }
+    }
+    if (extracted?.events?.length) {
+      for (const event of extracted.events) {
+        if (!event.description) continue;
+        const alreadyKnown = (patient.upcomingEvents ?? []).some(
+          e => e.description === event.description
+        );
+        if (!alreadyKnown) {
+          memoryUpdates.push(appendToPatientList(patientId, "upcomingEvents", event));
         }
       }
     }
