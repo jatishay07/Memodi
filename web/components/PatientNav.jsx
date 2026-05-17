@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   { href: '/family',        label: 'Memory Lane',  icon: '◎' },
 ];
 
-export default function PatientNav({ onSignOut }) {
+export default function PatientNav({ onSignOut, onHelp }) {
   const path = usePathname() ?? '';
 
   return (
@@ -42,6 +42,25 @@ export default function PatientNav({ onSignOut }) {
           </Link>
         );
       })}
+      {onHelp && (
+        <button
+          onClick={onHelp}
+          title="Open help & tour"
+          style={{
+            width: 42, height: 42, borderRadius: 999,
+            border: '2px solid rgba(255,255,255,0.55)',
+            background: 'rgba(255,255,255,0.40)',
+            backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+            color: '#DC4F7C', fontFamily: 'var(--font-serif)', fontSize: 20, fontWeight: 500,
+            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'background .2s ease, border-color .2s ease',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.75)'; e.currentTarget.style.borderColor = 'rgba(220,79,124,0.35)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.40)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.55)'; }}
+        >
+          ?
+        </button>
+      )}
       {onSignOut && (
         <button
           onClick={onSignOut}

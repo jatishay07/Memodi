@@ -73,6 +73,9 @@ export default function PatientPage() {
     if (!user) { router.replace('/auth/patient'); return; }
     if (user.role !== 'patient') { router.replace('/caregiver'); return; }
 
+    const key = `memodi_onboarding_${user.patientId || user.email}`;
+    if (localStorage.getItem(key) === 'done') setOnboardingPhase('done');
+
     getPatient(user.patientId)
       .then(setPatient)
       .catch(() => setPatient({ name: user.name || 'Friend', nickname: user.name?.split(' ')[0] || 'Friend' }));
@@ -81,12 +84,24 @@ export default function PatientPage() {
     return () => clearInterval(t);
   }, [ready, user]);
 
+  function markOnboardingSeen() {
+    const key = `memodi_onboarding_${user?.patientId || user?.email}`;
+    localStorage.setItem(key, 'done');
+  }
+
   function finishOnboarding() {
+    markOnboardingSeen();
     setOnboardingPhase('done');
   }
 
   function skipOnboarding() {
+    markOnboardingSeen();
     setOnboardingPhase('done');
+  }
+
+  function openHelp() {
+    setOnboardingPhase('welcome');
+    setTutorialStep(0);
   }
 
   function startTutorial() {
@@ -182,7 +197,7 @@ export default function PatientPage() {
       <Ambient particleCount={reducedMotion ? 0 : 8} />
       <AtmosphericDepth reduced={reducedMotion} />
 
-      <PatientNav onSignOut={logout} />
+      <PatientNav onSignOut={logout} onHelp={openHelp} />
 
       {/* Greeting + clock */}
       <div style={{
