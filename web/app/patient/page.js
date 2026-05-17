@@ -71,6 +71,7 @@ export default function PatientPage() {
   const [codeExpiresAt, setCodeExpiresAt] = useState(null);
   const [codeGenerating, setCodeGenerating] = useState(false);
   const [codeSecondsLeft, setCodeSecondsLeft] = useState(0);
+  const [codeCopied, setCodeCopied] = useState(false);
 
   const handleEmotionDistress = useCallback(distressed => setEmotionDistress(distressed), []);
 
@@ -87,6 +88,7 @@ export default function PatientPage() {
   async function handleGenerateCode() {
     if (!user?.patientId) return;
     setCodeGenerating(true);
+    setCodeCopied(false);
     try {
       const { code, expiresAt } = await generateConnectionCode(user.patientId);
       setSharingCode(code);
@@ -97,6 +99,14 @@ export default function PatientPage() {
     } finally {
       setCodeGenerating(false);
     }
+  }
+
+  function handleCopyLink(code) {
+    const url = `${window.location.origin}/connect?code=${code}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 2500);
+    });
   }
 
   useEffect(() => {
@@ -420,9 +430,22 @@ export default function PatientPage() {
               }}>
                 {sharingCode.slice(0, 3)}&thinsp;{sharingCode.slice(3)}
               </p>
-              <p style={{ fontSize: 13, color: '#9C9C9C', margin: '0 0 20px' }}>
+              <p style={{ fontSize: 13, color: '#9C9C9C', margin: '0 0 16px' }}>
                 Expires in {String(Math.floor(codeSecondsLeft / 60)).padStart(2, '0')}:{String(codeSecondsLeft % 60).padStart(2, '0')}
               </p>
+              <button
+                onClick={() => handleCopyLink(sharingCode)}
+                style={{
+                  width: '100%', padding: '11px 16px', borderRadius: 999, marginBottom: 10,
+                  border: '2px solid rgba(220,79,124,0.30)',
+                  background: codeCopied ? 'rgba(220,79,124,0.12)' : 'rgba(220,79,124,0.06)',
+                  color: '#DC4F7C', fontSize: 14, cursor: 'pointer',
+                  fontFamily: 'var(--font-sans)', fontWeight: 600,
+                  transition: 'all .2s ease',
+                }}
+              >
+                {codeCopied ? '✓ Link copied!' : '🔗 Copy invite link'}
+              </button>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button
                   onClick={handleGenerateCode}

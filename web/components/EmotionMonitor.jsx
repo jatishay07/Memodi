@@ -198,7 +198,7 @@ export default function EmotionMonitor({ onDistressChange, active = true }) {
     };
   }, [active, runAnalysis]);
 
-  if (!isEmotionEnabled()) return null;
+  if (!isEmotionEnabled() || status === 'offline') return null;
 
   const dominantLabel = faceDetected ? formatEmotionLabel(emotion) : '—';
   const dominantColor = faceDetected ? EMOTION_COLORS[emotion] : '#9C9C9C';
