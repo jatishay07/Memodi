@@ -54,21 +54,23 @@ Collect **name** and **timezone** on register (greeting + proactive scheduling).
 
 ## Q5 — Connection code lifecycle
 
-**Decision:** **A — One caregiver per patient**
+**Decision:** **One caregiver per patient; ephemeral 6-digit codes**
 
-Single `caregiverId` on the patient record; no data model changes. Multiple caregivers and code rotation are post-hackathon product features.
+- Generated on demand via `/patient/generate-code`
+- Expires in 15 minutes; single-use (cleared after link)
+- One `caregiverId` per patient
 
-**Impacts:** `data-model.md`, caregiver onboarding copy
+**Impacts:** `data-model.md`, patient + caregiver UIs
 
 ---
 
 ## Q6 — Caregiver without code at signup
 
-**Decision:** **Connection code required at signup** (keep current behavior)
+**Decision:** **Connection code required at caregiver signup**
 
-Patient must exist first. A caregiver without a linked patient has nothing to do in the app. No deferred linking in v1.
+Patient generates a 6-digit code (15 min). Caregiver must supply it when registering (`/auth/caregiver` or `/connect?code=`). `registerCaregiver` links accounts immediately. Optional `POST /caregiver/connect` for existing caregivers.
 
-**Impacts:** `user-journeys.md`, caregiver auth UI
+**Impacts:** `user-journeys.md`, `auth-and-sessions.md`, `api-reference.md`
 
 ---
 

@@ -1,22 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useLayoutEffect } from 'react';
 
 const STEPS = [
   {
     title: 'Your companion',
     body: 'You can talk to me when you need help remembering something. I am always here.',
-    pos: { bottom: '38%', left: '50%', transform: 'translateX(-50%)' },
+    anchorOrb: true,
   },
   {
     title: 'Start talking',
     body: 'Tap the button below, then speak naturally. You do not need to use any special words.',
-    pos: { bottom: '22%', left: '50%', transform: 'translateX(-50%)' },
+    anchorMic: true,
   },
   {
     title: "I'll answer clearly",
     body: 'When I respond, my words will appear on screen so you can read along.',
-    pos: { top: '50%', right: '5%', transform: 'translateY(-50%)' },
+    anchorChatBelow: true,
     demoResponse: true,
   },
   {
@@ -32,7 +32,7 @@ const STEPS = [
   {
     title: "You're ready",
     body: "Whenever you need me, I'll be right here.",
-    pos: { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' },
+    anchorOrb: true,
     isFinal: true,
   },
 ];
@@ -54,9 +54,41 @@ function StepDots({ total, current }) {
   );
 }
 
-export default function TutorialBubble({ onComplete, onSkip, onStepChange }) {
+function getRightSideAnchorStyle(anchor) {
+  const rect = anchor.getBoundingClientRect();
+  const bubbleWidth = Math.min(310, window.innerWidth - 48);
+  const viewportPadding = 24;
+  const idealLeft = rect.right + 20;
+  const maxLeft = window.innerWidth - bubbleWidth - viewportPadding;
+
+  return {
+    top: rect.top + rect.height / 2,
+    left: Math.max(viewportPadding, Math.min(idealLeft, maxLeft)),
+    transform: 'translateY(-50%)',
+  };
+}
+
+/** Place tutorial card just under the chat column, horizontally centered on it. */
+function getBelowChatAnchorStyle(anchor) {
+  const rect = anchor.getBoundingClientRect();
+  const bubbleWidth = Math.min(310, window.innerWidth - 48);
+  const viewportPadding = 24;
+  const gap = 10;
+  const centerX = rect.left + rect.width / 2;
+  let left = centerX - bubbleWidth / 2;
+  left = Math.max(viewportPadding, Math.min(left, window.innerWidth - bubbleWidth - viewportPadding));
+
+  return {
+    top: rect.bottom + gap,
+    left,
+    transform: 'none',
+  };
+}
+
+export default function TutorialBubble({ onComplete, onSkip, onStepChange, orbAnchorRef, micAnchorRef, chatAnchorRef }) {
   const [step, setStep] = useState(0);
   const [mounted, setMounted] = useState(false);
+  const [fixedAnchorStyle, setFixedAnchorStyle] = useState(null);
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 80);
@@ -65,6 +97,7 @@ export default function TutorialBubble({ onComplete, onSkip, onStepChange }) {
 
   function goTo(n) {
     setMounted(false);
+    setFixedAnchorStyle(null);
     setTimeout(() => {
       setStep(n);
       setMounted(true);
@@ -75,8 +108,48 @@ export default function TutorialBubble({ onComplete, onSkip, onStepChange }) {
   const current = STEPS[step];
   const isLast = step === STEPS.length - 1;
 
-  // Responsive: on narrow screens, anchor to bottom-center
-  const pos = current.pos;
+  useLayoutEffect(() => {
+    const cfg = STEPS[step];
+    if (!cfg.anchorOrb && !cfg.anchorMic && !cfg.anchorChatBelow) {
+      setFixedAnchorStyle(null);
+      return undefined;
+    }
+
+    function resolveAnchor(c) {
+      if (c.anchorOrb) return orbAnchorRef?.current;
+      if (c.anchorMic) return micAnchorRef?.current;
+      if (c.anchorChatBelow) return chatAnchorRef?.current;
+      return null;
+    }
+
+    function updatePosition() {
+      const c = STEPS[step];
+      const anchor = resolveAnchor(c);
+      if (!anchor) return;
+      if (c.anchorChatBelow) setFixedAnchorStyle(getBelowChatAnchorStyle(anchor));
+      else setFixedAnchorStyle(getRightSideAnchorStyle(anchor));
+    }
+
+    updatePosition();
+    const t = setTimeout(updatePosition, mounted ? 0 : 300);
+    const t2 = setTimeout(updatePosition, 50);
+    const t3 = setTimeout(updatePosition, 150);
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+
+    return () => {
+      clearTimeout(t);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [step, mounted, orbAnchorRef, micAnchorRef, chatAnchorRef]);
+
+  const usesFixedAnchor = !!(current.anchorOrb || current.anchorMic || current.anchorChatBelow);
+  const pos = usesFixedAnchor
+    ? (fixedAnchorStyle || { top: -9999, left: -9999 })
+    : current.pos;
 
   return (
     <>
@@ -100,7 +173,7 @@ export default function TutorialBubble({ onComplete, onSkip, onStepChange }) {
           zIndex: 90,
           maxWidth: 310,
           width: 'calc(100vw - 48px)',
-          opacity: mounted ? 1 : 0,
+          opacity: mounted && (!usesFixedAnchor || fixedAnchorStyle) ? 1 : 0,
           transition: 'opacity 0.35s ease',
           /* bubbleFloat uses CSS `translate` property so it composes with
              `transform` centering offsets in pos without overriding them */

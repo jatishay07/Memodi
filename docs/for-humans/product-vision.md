@@ -26,20 +26,22 @@ People with dementia often experience confusion, anxiety, and repetition. Generi
 1. **Voice first** — Speak and listen; text is secondary.
 2. **Memory grounded** — Only use caregiver-entered facts.
 3. **Warm and brief** — Short sentences; no arguing or correcting.
-4. **Calm visual design** — Dark navy, amber orb, minimal chrome.
+4. **Calm visual design** — Warm cream palette, WebGL orb, minimal chrome.
 5. **Caregiver in the loop** — Distress alerts; Memory Bank for accuracy.
-6. **Simple onboarding** — Patient registers → shares connection code → caregiver links at signup.
+6. **Simple onboarding** — Patient verifies email → generates share link → caregiver registers with code.
 
 ## Core capabilities (v1)
 
 | Capability | Description |
 |------------|-------------|
-| Voice companion | Orb → speak → Memodi responds with voice + caption |
-| Memory Bank | Caregivers add people, objects, history, meds, events |
+| Voice companion | Mic → browser STT → Bedrock Agent → Piper voice + caption |
+| Live emotions (local) | Webcam distress tint on orb (no cloud upload) |
+| Linking | 6-digit codes + `/connect` deep link |
+| Memory Bank | Caregivers add, edit, and delete people, objects, history, meds, events |
 | Photo identify | Face match + spoken description |
 | Distress detection | Alerts + SNS |
 | Proactive routine | Scheduled messages per timezone |
-| Auth | Email/password; connection code linking |
+| Auth | Cognito email/password; ephemeral connection codes |
 
 ## Access model (v1)
 

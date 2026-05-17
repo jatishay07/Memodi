@@ -58,6 +58,19 @@ CSS variables `--orb-color` and `--orb-glow` drive core fill and radial glow. De
 
 ## Components
 
+| Component | Role |
+|-----------|------|
+| `Orb.jsx` | WebGL companion (`ogl`) |
+| `EmotionMonitor.jsx` | Webcam + emotion bars |
+| `PatientWelcome.jsx` | First-visit welcome |
+| `TutorialBubble.jsx` | Onboarding on `/patient` |
+| `ComfortTray.jsx` | Text scale, motion, contrast |
+| `AtmosphericDepth.jsx` | Patient page depth layers |
+| `MemodiMesh.jsx` | Landing background |
+| `Logo.jsx` | Auth branding |
+| `MemoryCard.jsx` | Memory Bank rows |
+| `PatientNav` / `CaregiverNav` | Role navigation |
+
 ### TabNav
 
 - Brand: “Memodi” in amber on desktop sidebar

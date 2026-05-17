@@ -18,9 +18,9 @@ One item per patient. Created on register; memories appended via `uploadMemory`.
 | Field | Type | Notes |
 |-------|------|-------|
 | `patientId` | String | PK, e.g. `patient-{uuid}` |
-| `email` | String | Login; GSI |
-| `hashedPassword` | String | bcrypt; **never returned to client** |
-| `connectionCode` | String | 8-char alphanumeric; GSI; **stripped on GET patient** |
+| `email` | String | Cognito username; GSI |
+| `connectionCode` | String \| null | 6-digit when active; GSI; **stripped on GET** |
+| `connectionCodeExpiresAt` | String \| null | ISO; 15-minute TTL from `generate-code` |
 | `name` | String | Full name |
 | `nickname` | String | Defaults to first name |
 | `dateOfBirth` | String | ISO date, e.g. `1942-03-15` |
@@ -64,8 +64,9 @@ One item per patient. Created on register; memories appended via `uploadMemory`.
 |-------|------|-------|
 | `caregiverId` | String | PK, e.g. `caregiver-{uuid}` |
 | `email` | String | GSI |
-| `hashedPassword` | String | Never returned |
-| `linkedPatientId` | String | Patient this caregiver monitors |
+| `name` | String | Display name |
+| `relationship` | String | e.g. `daughter` |
+| `linkedPatientId` | String \| null | Set at register-with-code or `/caregiver/connect` |
 | `createdAt` | String | ISO timestamp |
 
 ## `memodi-interactions`
@@ -187,8 +188,8 @@ Use for manual DynamoDB seeding or integration tests:
 
 `getPatient` strips before JSON response:
 
-- `hashedPassword`
 - `connectionCode`
+- `connectionCodeExpiresAt`
 
 All other fields are returned to any caller with the `patientId` (v1 has no backend auth enforcement; use client route guards).
 

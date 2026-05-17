@@ -4,6 +4,8 @@ import { useEffect, useRef } from 'react';
 import { Mesh, Program, Renderer, Triangle, Vec3 } from 'ogl';
 
 const PAGE_BG = '#FFF9F0'; // matches the website background
+/** CSS on the canvas (caret / fallback; devtools “color” on canvas). */
+const CANVAS_COLOR = 'rgba(250, 227, 215, 1)';
 
 const STATE_COLORS = {
   idle:      [[0xFC/255, 0x8A/255, 0x2D/255], [0xDC/255, 0x4F/255, 0x7C/255], [0xFC/255, 0xE9/255, 0xAB/255]],
@@ -173,6 +175,7 @@ export default function Orb({ state = 'idle', size = 280, onClick }) {
     gl.clearColor(0,0,0,0);
     const canvas = gl.canvas;
     canvas.style.display = 'block';
+    canvas.style.color = CANVAS_COLOR;
     container.appendChild(canvas);
 
     const colors = STATE_COLORS[stateRef.current] || STATE_COLORS.idle;

@@ -1,91 +1,54 @@
 # User Journeys
 
-Screen-level flows for Memodi. Routes marked **(not built)** are implementation targets.
+## 0. Landing (`/`)
+
+Marketing page (`MemodiMesh`). CTAs → patient or caregiver auth. Logged-in users redirect to their home route.
 
 ## 1. Patient onboarding
 
-```mermaid
-sequenceDiagram
-  participant Patient
-  participant App as /auth/patient
-  participant API as Backend
-
-  Patient->>App: name email password timezone
-  App->>API: POST /auth/patient/register
-  API-->>App: token + connectionCode
-  App->>Patient: Show connection code copy UI
-  Patient->>Patient: Share code with caregiver
-  App->>App: Save session redirect /patient
-```
-
-**Register fields:** email, password, name, timezone (required). DOB and preferences optional / profile later.
-
-**Not shown at signup:** preferences editor (server defaults apply).
+1. `/auth/patient` — register or login (Cognito + JWT on login)
+2. First visit `/patient` — welcome → optional tutorial → companion
+3. **Share with caregiver** — generate 6-digit code (15 min) → copy link `/connect?code=…`
 
 ## 2. Caregiver onboarding
 
-```mermaid
-sequenceDiagram
-  participant Caregiver
-  participant App as /auth/caregiver
-  participant API as Backend
+**Path A — Code at signup**
 
-  Caregiver->>App: email password connectionCode
-  App->>API: POST /auth/caregiver/register
-  API-->>App: token patientId patientName
-  App->>Caregiver: Welcome linked to patient
-  App->>App: Redirect /caregiver or /family
-```
+1. Patient shares code or link
+2. `/auth/caregiver` or `/connect?code=123456` — name, relationship, email, password
+3. `registerCaregiver` validates code, links accounts, sends verification email
+4. Verify email → login → `/caregiver` and `/family`
 
-**Rules:**
+**Path B — Connect later**
 
-- Connection code **required** at signup — patient must exist first
-- **One caregiver** per patient in v1
-- No “register now, link later” flow
+1. Caregiver has account but needs link → `POST /caregiver/connect` (if UI exposed)
 
-## 3. Daily companion use (patient)
+**Rules:** One caregiver per patient; expired codes return 410; used codes are cleared.
 
-**Route:** `/patient` **(not built)**
+## 3. Daily companion (`/patient`)
 
-- Tap orb → listen → tap → processing → spoken response
-- Distress turns orb pink; caregiver gets alert
-- Uses session `patientId` only
+- Tap mic → browser listens → stop → Bedrock Agent response → Piper speaks
+- Optional: `EmotionMonitor` (local DeepFace) tints orb on sustained negative emotion
+- `ComfortTray` — text size, motion, contrast (client-side)
+- Distress keywords → SNS alert + caregiver dashboard
 
-## 4. Memory Bank (caregiver)
+## 4. Memory Bank (`/family`)
 
-**Route:** `/family` **(not built)**  
-**Access:** **Caregivers only** — patients cannot open this route
+Caregiver only. Tabs: People, Objects, Life History, Medications, Events.
 
-Tabs: People · Objects · Life History · Medications · Events
+- Add via `POST /memory`
+- Edit / delete via `/memory/edit`, `/memory/delete`
 
-Uses caregiver JWT’s `patientId` (linked patient).
+## 5. Caregiver dashboard (`/caregiver`)
 
-**Future:** Family-member role may access Memory Bank without caregiver dashboard.
+Alerts, interactions, resolve alerts.
 
-## 5. Caregiver dashboard
+## 6. Distress & proactive
 
-**Route:** `/caregiver` **(not built)**
+- Voice distress → alert + SNS
+- EventBridge `getScheduledMessage` — routine schedule (uses legacy `invokeClaude` until fixed)
 
-Alerts, interactions, summary stats. Resolve alerts in UI.
+## Related
 
-## 6. Distress alert
-
-Voice pipeline → DynamoDB alert → SNS → caregiver checks dashboard.
-
-## 7. Proactive routine
-
-EventBridge every 15 min; matches `routine.schedule` to patient timezone. Logged as interactions; patient playback UI optional later.
-
-## Navigation by role
-
-| Role | Tabs (`TabNav.jsx`) |
-|------|---------------------|
-| Patient | Companion (`/patient`) |
-| Caregiver | Memory Bank (`/family`), Dashboard (`/caregiver`) |
-
-Middleware should block wrong-role access (e.g. patient → `/family` → redirect).
-
-## Related docs
-
-- [product-vision.md](product-vision.md)
-- [../architecture/auth-and-sessions.md](../architecture/auth-and-sessions.md)
+- [auth-and-sessions.md](../architecture/auth-and-sessions.md)
+- [voice-pipeline.md](../architecture/voice-pipeline.md)

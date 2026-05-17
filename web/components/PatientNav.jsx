@@ -32,7 +32,7 @@ export default function PatientNav({ onSignOut, onHelp }) {
               border: `2px solid ${active ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.55)'}`,
               background: active ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.40)',
               backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-              color: active ? '#DC4F7C' : '#6B6B6B',
+              color: item.href === '/family' ? 'rgba(250, 227, 215, 1)' : active ? '#DC4F7C' : '#6B6B6B',
               boxShadow: active ? '0 8px 24px rgba(45,45,45,0.08)' : 'none',
               fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 500,
               textDecoration: 'none',

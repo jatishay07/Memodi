@@ -1,37 +1,26 @@
 # Memodi
 
-A voice-first memory companion for dementia patients. Caregivers monitor alerts and manage a shared memory bank.
+Voice-first memory companion for dementia patients. Caregivers monitor alerts and manage a shared memory bank.
 
-> **Memodi is a prototype built for demonstration purposes and is not HIPAA-compliant.**
+> **Prototype — not HIPAA-compliant.**
 
-**Documentation:** [docs/README.md](docs/README.md)
-
-## Quick links
-
-- [Product vision](docs/for-humans/product-vision.md)
-- [Architecture overview](docs/architecture/system-overview.md)
-- [Agent rebuild guide](docs/for-agents/CLAUDE.md)
-- [Design decisions](docs/decisions/OPEN_QUESTIONS.md)
+**Docs:** [docs/README.md](docs/README.md)
 
 ## Stack
 
-Next.js 14 · AWS Lambda · DynamoDB · Bedrock · Polly · Transcribe · `us-east-1`
+Next.js 14 · AWS Lambda · Cognito · Bedrock Agent · DynamoDB · Piper + DeepFace (local dev) · `us-east-1`
 
 ## Local development
 
 ```bash
-# One-time: create S3 buckets + Rekognition collection (see docs/for-humans/operations.md)
+# One-time: Rekognition collection + SNS (see docs/for-humans/operations.md)
 
-# Backend
-npm install
+cd lambda && npm install && cd ..
 export JWT_SECRET="..."
 export SNS_CAREGIVER_TOPIC_ARN="..."
 npm run deploy
 
-# Frontend
-cd web && npm install
-# web/.env.local → NEXT_PUBLIC_API_BASE_URL
-npm run dev
-```
+# web/.env.local → NEXT_PUBLIC_API_BASE_URL, NEXT_PUBLIC_PIPER_URL
 
-See [docs/for-humans/operations.md](docs/for-humans/operations.md).
+npm run dev   # Piper + optional DeepFace + Next.js
+```

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, forwardRef } from 'react';
 import AiTurn from './AiTurn';
 import ChatBubble from './ChatBubble';
 
@@ -98,7 +98,7 @@ function DateDivider() {
   );
 }
 
-export default function ChatPanel({
+const ChatPanel = forwardRef(function ChatPanel({
   phase,
   history,
   partialUser,
@@ -107,7 +107,7 @@ export default function ChatPanel({
   reducedMotion = false,
   peopleIndex,
   eventsIndex,
-}) {
+}, ref) {
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -143,6 +143,15 @@ export default function ChatPanel({
           scrollbarColor: 'rgba(45,45,45,0.10) transparent',
         }}
       >
+        <div
+          ref={ref}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 22,
+            width: '100%',
+          }}
+        >
         <DateDivider />
 
         {history.map((turn, index) => (
@@ -191,7 +200,10 @@ export default function ChatPanel({
             peopleIndex={peopleIndex}
           />
         )}
+        </div>
       </div>
     </div>
   );
-}
+});
+
+export default ChatPanel;

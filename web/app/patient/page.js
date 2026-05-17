@@ -122,6 +122,9 @@ export default function PatientPage() {
   const partialAIRef = useRef('');
   const audioRef = useRef(null);
   const revealTimerRef = useRef(null);
+  const orbRef = useRef(null);
+  const micRef = useRef(null);
+  const chatPanelRef = useRef(null);
 
   const handleEmotionDistress = useCallback(distressed => setEmotionDistress(distressed), []);
 
@@ -494,6 +497,7 @@ export default function PatientPage() {
             reducedMotion={reducedMotion}
           />
           <ChatPanel
+            ref={chatPanelRef}
             phase={displayPhase}
             history={displayHistory}
             partialUser={partialUser}
@@ -517,10 +521,13 @@ export default function PatientPage() {
             justifyContent: 'center',
           }}
         >
-          <Orb state={displayOrbState} size={480} />
+          <div ref={orbRef} style={{ display: 'inline-flex', lineHeight: 0 }}>
+            <Orb state={displayOrbState} size={480} />
+          </div>
 
           <div style={{ marginTop: 64, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
             <button
+              ref={micRef}
               onClick={handleMic}
               aria-label="Tap to speak with me"
               onMouseDown={event => { event.currentTarget.style.transform = 'scale(0.94)'; }}
@@ -561,6 +568,9 @@ export default function PatientPage() {
 
       {onboardingPhase === 'tutorial' && (
         <TutorialBubble
+          orbAnchorRef={orbRef}
+          micAnchorRef={micRef}
+          chatAnchorRef={chatPanelRef}
           onComplete={finishOnboarding}
           onSkip={skipOnboarding}
           onStepChange={setTutorialStep}

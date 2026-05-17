@@ -1,55 +1,55 @@
 # Codebase Map
 
-## Root
+## Root layout
 
 ```
 .
-├── package.json          # Deploy + AWS SDK deps
-├── serverless.yml        # Lambdas, DynamoDB, IAM
-├── README.md             # Disclaimer + link to docs/
-└── docs/                 # Full documentation suite
+├── serverless.yml          # 19 Lambdas, Cognito, S3, DynamoDB
+├── lambda/                 # npm install here before deploy
+├── scripts/dev.sh          # Piper + DeepFace + Next.js
+├── services/               # piper-tts, deepface-emotion
+└── web/
+    ├── app/                # pages
+    ├── components/         # UI
+    └── lib/                # api, auth, audio, emotion
 ```
 
-## `lambda/` — implemented
+## Lambdas (19 handlers)
 
-| Path | Status |
-|------|--------|
-| `shared/bedrock.js` | Done |
-| `shared/dynamodb.js` | Done |
-| `shared/polly.js` | Done |
-| `shared/transcribe.js` | Done |
-| `shared/auth.js` | **Not built** (post-hackathon) |
-| Auth handlers (4) | Done |
-| Core handlers (7) | Done |
+| Area | Functions |
+|------|-----------|
+| Auth | register/login patient & caregiver, verify, forgot/reset password |
+| Linking | `generateConnectionCode`, `connectToPatient` |
+| Voice | `processTextInput`, `processVoiceInput` (legacy) |
+| Memory | `uploadMemory`, `manageMemory` (delete/edit), `identifyPhoto` |
+| Data | `getPatient`, `getAlerts`, `getInteractions`, `resolveAlert` |
+| Cron | `getScheduledMessage` |
 
-## `web/` — partial
+## Shared modules
 
-| Path | Status |
-|------|--------|
-| `lib/api.js` | Done — Bearer header, no hardcoded ID |
-| `lib/auth.js` | Done |
-| `lib/audio.js` | Done |
-| `components/*` | Done (4 components) |
-| `app/globals.css` | Done |
-| `app/layout.js`, pages, `middleware.js` | **Not built** |
+| File | Exports |
+|------|---------|
+| `bedrock.js` | `invokeAgent`, `extractWithAI`, `extractJSON` |
+| `cognito.js` | SignUp, auth, forgot password |
+| `dynamodb.js` | CRUD + list append/delete/update |
+| `polly.js`, `transcribe.js` | Legacy `/voice` |
 
-## Ownership
+## Web pages
 
-| Concern | Location |
-|---------|----------|
-| HTTP routes | `serverless.yml` |
-| DB | `lambda/shared/dynamodb.js` |
-| UI | `web/components/`, `web/app/` (pages TBD) |
-| Session | `web/lib/auth.js` |
+| Path | Notes |
+|------|-------|
+| `app/page.js` | Landing |
+| `app/auth/*` | Sign-in components |
+| `app/connect/` | Caregiver register with code from URL |
+| `app/patient/page.js` | Orb, STT, Piper, onboarding, code share, EmotionMonitor |
+| `app/family/page.js` | Memory CRUD |
+| `app/caregiver/page.js` | Dashboard |
 
-## v1 constraints (from decisions)
+## Key components
 
-- Do not add JWT verify to Lambdas unless explicitly requested
-- Do not add S3/Rekognition to serverless.yml
-- Middleware must block patients from `/family`
-- Register patient with `name` + `timezone` required in UI (align with docs; backend may still accept optional DOB)
+`Orb`, `EmotionMonitor`, `PatientWelcome`, `TutorialBubble`, `ComfortTray`, `AtmosphericDepth`, `MemoryCard`, `PatientNav`, `CaregiverNav`, `MemodiMesh`
 
 ## Related
 
+- [api-reference.md](api-reference.md)
 - [implementation-checklist.md](implementation-checklist.md)
-- [rebuild-from-scratch.md](rebuild-from-scratch.md)
