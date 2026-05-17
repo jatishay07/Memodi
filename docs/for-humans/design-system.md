@@ -100,7 +100,7 @@ Guidelines for implementation and content:
 3. **High contrast** — White/cream on navy; amber for focus states
 4. **Predictable flow** — Tap to start, tap to send; same pattern every time
 5. **Error recovery** — Plain language; no error codes shown to patient
-6. **Audio first** — Text response is supplementary; always play Polly audio on success
+6. **Audio first** — Text response is supplementary; always play Piper audio on success
 7. **Distress visibility** — Pink state + caregiver alert; do not rely on color alone (hint text changes too)
 
 ## Category chips (Memory Bank)

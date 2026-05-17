@@ -1,6 +1,8 @@
 # System Overview
 
-Memodi connects a Next.js web app to AWS Lambda functions behind API Gateway HTTP API. Patients interact via voice; caregivers manage memories and monitor alerts.
+Memodi connects a Next.js web app to AWS Lambda functions behind API Gateway HTTP API. Patients interact through a calm companion experience; caregivers manage memories and monitor alerts.
+
+Memodi is not a generic chatbot. It is a memory-aware companion: every patient-facing response should be grounded in caregiver- or family-entered memories, patient profile data, routines, preferences, and recent conversation context.
 
 ## High-level architecture
 
@@ -21,18 +23,25 @@ flowchart TB
     DDB[(DynamoDB)]
     S3[(S3)]
     Bedrock[Bedrock Claude]
-    Polly[Polly TTS]
+    Titan[Titan Embeddings]
+    KB[Vector Store / Bedrock Knowledge Base]
     Transcribe[Transcribe STT]
     Rekognition[Rekognition]
     SNS[SNS Alerts]
     EB[EventBridge 15min]
   end
 
+  subgraph local [Local Device / Edge Service]
+    Piper[Piper TTS]
+  end
+
   AuthUI --> APIGW --> LambdaAuth --> DDB
   PatientUI --> APIGW --> LambdaVoice
   LambdaVoice --> Transcribe --> S3
   LambdaVoice --> Bedrock
-  LambdaVoice --> Polly
+  LambdaVoice --> Titan --> KB
+  KB --> LambdaVoice
+  LambdaVoice --> Piper
   LambdaVoice --> DDB
   LambdaVoice --> SNS
   FamilyUI --> APIGW --> LambdaCore --> DDB
@@ -54,10 +63,36 @@ flowchart TB
 | Primary database | DynamoDB (4 tables) |
 | Object storage | S3 (manual setup) |
 | LLM | Amazon Bedrock — Claude Sonnet 4 |
-| Speech | Polly (Ruth neural), Transcribe (en-US) |
+| Embeddings / memory search | Amazon Titan Embeddings + vector store or Bedrock Knowledge Base |
+| Speech | Transcribe or browser STT for voice input; Piper TTS for local voice output |
 | Vision | Rekognition `memodi-faces` (manual setup) |
 | Notifications | SNS |
 | Schedules | EventBridge `rate(15 minutes)` |
+
+## AI and memory provider roles
+
+| Provider | Role | Handles |
+|----------|------|---------|
+| Anthropic Claude via Bedrock | Cognitive layer | Understanding patient requests, reasoning over memory context, generating short calm responses |
+| Amazon Titan Embeddings | Memory indexing | Converting memory text and patient queries into vectors for semantic search |
+| DynamoDB | Structured storage | Patient profiles, caregiver links, raw memories, routines, preferences, conversation history, alerts |
+| Vector store / Bedrock Knowledge Base | Searchable memory layer | Retrieving semantically relevant memories for each patient turn |
+| Piper TTS | Local voice output | Speaking Claude's final text response only |
+
+Claude does not permanently store memories. It receives patient profile data, retrieved memory snippets, and recent conversation context for each turn, then writes the response. Piper does not reason or remember; it only converts the final text response into audio.
+
+## Memory-aware response flow
+
+```mermaid
+flowchart TB
+  UserInput[Patient speaks or types] --> ClaudeIntent[Claude understands request]
+  ClaudeIntent --> QueryEmbedding[Titan Embeddings vectorizes query]
+  QueryEmbedding --> MemorySearch[Vector store or Bedrock Knowledge Base retrieves memories]
+  MemorySearch --> PromptContext[Assemble profile, memories, recent turns, user query]
+  PromptContext --> ClaudeResponse[Claude writes calm personalized response]
+  ClaudeResponse --> PiperAudio[Piper TTS generates local audio]
+  PiperAudio --> PatientHears[Patient hears the answer]
+```
 
 ## HTTP route map
 

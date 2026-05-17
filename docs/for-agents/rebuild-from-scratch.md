@@ -6,7 +6,7 @@ Master reference to regenerate Memodi. See [CLAUDE.md](CLAUDE.md) for agent rule
 
 ## What is Memodi?
 
-Voice-first memory companion for dementia patients. Stack: Next.js 14, AWS Lambda, DynamoDB, Bedrock, Polly, Transcribe, Rekognition, SNS, EventBridge.
+Voice-first memory companion for dementia patients. Stack: Next.js 14, AWS Lambda, DynamoDB, Bedrock Claude, Titan Embeddings, vector memory search, Piper TTS, Transcribe / browser STT, Rekognition, SNS, EventBridge.
 
 ## v1 decisions (locked)
 
@@ -63,7 +63,7 @@ Navy/amber/cream/pink/gold; orb states `idle|listening|speaking|distress|morning
 
 ## Voice pipeline
 
-Transcribe → memory context (Bedrock) → response (Bedrock) → distress + Polly → save interaction/alert. See [../architecture/voice-pipeline.md](../architecture/voice-pipeline.md).
+Transcribe / browser STT → Titan query embedding → vector memory retrieval → Claude response → distress check + Piper TTS → save interaction/alert. See [../architecture/voice-pipeline.md](../architecture/voice-pipeline.md).
 
 ## Deploy
 

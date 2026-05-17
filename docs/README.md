@@ -27,6 +27,7 @@ Memodi is a voice-first memory companion for dementia patients. Caregivers monit
 - [architecture/data-model.md](architecture/data-model.md)
 - [architecture/auth-and-sessions.md](architecture/auth-and-sessions.md)
 - [architecture/voice-pipeline.md](architecture/voice-pipeline.md)
+- [architecture/photo-object-tracker.md](architecture/photo-object-tracker.md)
 - [architecture/aws-infrastructure.md](architecture/aws-infrastructure.md)
 
 ### For humans
@@ -52,7 +53,7 @@ Memodi is a voice-first memory companion for dementia patients. Caregivers monit
 | Backend | AWS Lambda, Serverless Framework 3 |
 | Region | `us-east-1`, single stage |
 | Data | DynamoDB, S3 (manual setup) |
-| AI / voice | Bedrock, Polly, Transcribe, Rekognition |
+| AI / voice | Bedrock Claude, Titan Embeddings, vector memory search, Piper TTS, Transcribe / browser STT, Rekognition |
 
 ## Implementation status
 

@@ -8,7 +8,9 @@
     "logs:voice": "serverless logs -f processVoiceInput -t",
     "dev": "bash scripts/dev.sh",
     "piper:up": "bash scripts/start-piper.sh",
-    "deepface:up": "bash scripts/start-deepface.sh"
+    "deepface:up": "bash scripts/start-deepface.sh",
+    "tracker:setup": "bash scripts/setup-tracker.sh",
+    "tracker:up": "bash scripts/start-tracker.sh"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.0.0",

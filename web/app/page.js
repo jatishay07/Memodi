@@ -49,8 +49,12 @@ export default function Landing() {
         </div>
 
         <nav style={{ display: 'flex', gap: 4 }}>
-          {['About', 'Help'].map(label => (
-            <a key={label} href="#" style={{
+          {[
+            { label: 'Tracker', href: '/tracker' },
+            { label: 'About', href: '#' },
+            { label: 'Help', href: '#' },
+          ].map(item => (
+            <a key={item.label} href={item.href} style={{
               color: 'rgba(61,52,42,0.72)', fontSize: 13, fontWeight: 400,
               padding: '8px 14px', borderRadius: 999, textDecoration: 'none',
               transition: 'all .2s ease',
@@ -58,7 +62,7 @@ export default function Landing() {
               onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,251,247,0.5)'; e.currentTarget.style.color = '#3d342a'; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(61,52,42,0.72)'; }}
             >
-              {label}
+              {item.label}
             </a>
           ))}
         </nav>

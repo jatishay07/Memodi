@@ -107,6 +107,30 @@ Queried via `PatientIdIndex`, newest first (`ScanIndexForward: false`).
 
 Buckets are created manually before deploy (not in Serverless). See [aws-infrastructure.md](aws-infrastructure.md).
 
+## Memory records and vector index
+
+DynamoDB is the source of truth for raw memories and structured patient data. The vector store or Bedrock Knowledge Base stores embedded representations of those memories for semantic search.
+
+When a caregiver or family member adds a memory:
+
+1. Store the raw memory text and metadata in DynamoDB.
+2. Generate an embedding with Amazon Titan Embeddings.
+3. Store the vector in the vector layer with a reference back to the DynamoDB memory record.
+4. Retrieve relevant vectors at conversation time and pass the original memory text to Claude as context.
+
+Recommended memory types:
+
+| Type | Description | Entered by |
+|------|-------------|------------|
+| `location` | Where important objects are kept | Caregiver |
+| `routine` | Daily schedules and habits | Caregiver |
+| `personal_history` | Family, life events, relationships | Family / caregiver |
+| `medical` | Medications, conditions, doctors | Caregiver / medical staff |
+| `preference` | Food, music, hobbies, comfort items | Family / caregiver |
+| `emergency_contact` | Who to call and where to go | Caregiver |
+
+Vector entries should include enough metadata to filter by `patientId`, memory type, freshness, and caregiver/family source before the text is used in a Claude prompt.
+
 ## Rekognition
 
 - Collection ID: `memodi-faces`

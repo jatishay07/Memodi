@@ -4,6 +4,9 @@ node_modules/
 services/*/.venv/
 services/piper-tts/voices/
 web/.env.local
+__pycache__/
+*.pyc
+*.pt
 *.mp3
 *.wav
 dist/
