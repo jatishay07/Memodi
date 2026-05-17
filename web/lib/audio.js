@@ -45,12 +45,33 @@ export async function stopRecordingAndGetBase64() {
   });
 }
 
-export async function playAudioBase64(base64) {
-  const audio = new Audio(`data:audio/mpeg;base64,${base64}`);
+export async function playAudioBase64(base64, mimeType = 'audio/wav') {
+  const audio = new Audio(`data:${mimeType};base64,${base64}`);
   await audio.play();
   return audio;
 }
 
 export function isRecordingActive() {
   return mediaRecorder?.state === 'recording';
+}
+
+let recognition = null;
+
+export function startSpeechRecognition() {
+  return new Promise((resolve, reject) => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) { reject(new Error('Speech recognition not supported in this browser')); return; }
+    recognition = new SR();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.onresult = e => resolve(e.results[0][0].transcript);
+    recognition.onerror = e => reject(new Error(e.error));
+    recognition.onend = () => { recognition = null; };
+    recognition.start();
+  });
+}
+
+export function stopSpeechRecognition() {
+  if (recognition) { recognition.stop(); recognition = null; }
 }

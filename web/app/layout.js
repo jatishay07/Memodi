@@ -3,7 +3,7 @@ import Providers from './providers';
 
 export const metadata = {
   title: 'Memodi',
-  description: 'Helping memories stay close.'
+  description: 'A warm memory companion for dementia patients'
 };
 
 export default function RootLayout({ children }) {

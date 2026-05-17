@@ -261,6 +261,10 @@ input, textarea, select, button { font-family: var(--font-sans); }
   transform: rotate(-45deg) translate(0px, -1px);
 }
 
+.emotion-mirror {
+  transform: scaleX(-1);
+}
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar        { width: 4px; }
 ::-webkit-scrollbar-track  { background: transparent; }

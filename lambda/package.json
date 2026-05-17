@@ -2,7 +2,9 @@
   "name": "memodi-lambda",
   "type": "module",
   "dependencies": {
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.1048.0",
     "@aws-sdk/client-bedrock-runtime": "^3.0.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.0.0",
     "@aws-sdk/client-dynamodb": "^3.0.0",
     "@aws-sdk/client-polly": "^3.0.0",
     "@aws-sdk/client-rekognition": "^3.0.0",

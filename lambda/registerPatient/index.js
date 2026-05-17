@@ -1,13 +1,12 @@
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import { getPatientByEmail, putPatient } from "../shared/dynamodb.js";
+import { signUpUser, resendCode } from "../shared/cognito.js";
 
 const CORS = {
   "Content-Type": "application/json",
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Content-Type,Authorization",
-  "Access-Control-Allow-Methods": "POST,OPTIONS"
+  "Access-Control-Allow-Methods": "POST,OPTIONS",
 };
 
 function respond(status, body) {
@@ -30,27 +29,38 @@ export const handler = async (event) => {
   try { body = JSON.parse(event.body || "{}"); }
   catch { return respond(400, { error: "Invalid JSON" }); }
 
-  const { email, password, name, dateOfBirth, timezone } = body;
+  const { email, password, name } = body;
   if (!email || !password || !name) {
     return respond(400, { error: "email, password, and name are required" });
   }
 
+  try {
+    await signUpUser(email, password, name);
+  } catch (err) {
+    if (err.name === "UsernameExistsException") {
+      // If unconfirmed, resend code so they can still verify
+      try {
+        await resendCode(email);
+        return respond(200, { needsVerification: true, email, message: "Verification code resent." });
+      } catch {
+        return respond(409, { error: "Email already registered" });
+      }
+    }
+    if (err.name === "InvalidPasswordException") return respond(400, { error: "Password must be at least 8 characters" });
+    return respond(500, { error: "Registration failed. Please try again." });
+  }
+
+  // Reuse existing DynamoDB record if present (e.g. after a Cognito-only deletion), otherwise create new
   const existing = await getPatientByEmail(email);
-  if (existing) return respond(409, { error: "Email already registered" });
+  const patientId = existing?.patientId || `patient-${uuidv4()}`;
+  const connectionCode = existing?.connectionCode || generateConnectionCode();
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const patientId = `patient-${uuidv4()}`;
-  const connectionCode = generateConnectionCode();
-
-  const patient = {
+  await putPatient({
     patientId,
     email,
-    hashedPassword,
     connectionCode,
     name,
     nickname: name.split(" ")[0],
-    dateOfBirth: dateOfBirth || "",
-    timezone: timezone || "America/New_York",
     caregiverId: null,
     familyMembers: [],
     objects: [],
@@ -59,16 +69,13 @@ export const handler = async (event) => {
     upcomingEvents: [],
     preferences: { comfortPhrases: ["You are loved", "Everything is okay", "You are safe"], avoidTopics: [] },
     routine: { schedule: [] },
-    createdAt: new Date().toISOString()
-  };
+    createdAt: new Date().toISOString(),
+  });
 
-  await putPatient(patient);
-
-  const token = jwt.sign(
-    { sub: patientId, role: "patient", patientId },
-    process.env.JWT_SECRET,
-    { expiresIn: "30d" }
-  );
-
-  return respond(201, { token, connectionCode, patientId, role: "patient", name: patient.name });
+  return respond(201, {
+    message: "Verification email sent. Please check your inbox.",
+    patientId,
+    email,
+    name,
+  });
 };

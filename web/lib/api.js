@@ -25,23 +25,54 @@ async function request(path, options = {}) {
   return body;
 }
 
+function normalizeEmail(email) {
+  return (email || '').trim().toLowerCase();
+}
+
 // Auth
 export async function registerPatient(data) {
-  return request('/auth/patient/register', { method: 'POST', body: JSON.stringify(data) });
+  return request('/auth/patient/register', { method: 'POST', body: JSON.stringify({ ...data, email: normalizeEmail(data.email) }) });
 }
 export async function loginPatient(data) {
-  return request('/auth/patient/login', { method: 'POST', body: JSON.stringify(data) });
+  return request('/auth/patient/login', { method: 'POST', body: JSON.stringify({ ...data, email: normalizeEmail(data.email) }) });
 }
 export async function registerCaregiver(data) {
-  return request('/auth/caregiver/register', { method: 'POST', body: JSON.stringify(data) });
+  return request('/auth/caregiver/register', { method: 'POST', body: JSON.stringify({ ...data, email: normalizeEmail(data.email) }) });
 }
 export async function loginCaregiver(data) {
-  return request('/auth/caregiver/login', { method: 'POST', body: JSON.stringify(data) });
+  return request('/auth/caregiver/login', { method: 'POST', body: JSON.stringify({ ...data, email: normalizeEmail(data.email) }) });
+}
+export async function verifyEmail(email, code) {
+  return request('/auth/verify', { method: 'POST', body: JSON.stringify({ email: normalizeEmail(email), code: (code || '').trim() }) });
+}
+export async function resendVerificationCode(email) {
+  return request('/auth/verify', { method: 'POST', body: JSON.stringify({ email: normalizeEmail(email), resend: true }) });
+}
+export async function requestPasswordReset(email) {
+  return request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email: normalizeEmail(email) }) });
+}
+export async function confirmPasswordReset(email, code, newPassword) {
+  return request('/auth/reset-password', { method: 'POST', body: JSON.stringify({ email: normalizeEmail(email), code: code.trim(), newPassword }) });
 }
 
 // Patient API
 export async function sendVoiceInput(patientId, audioBase64) {
   return request('/voice', { method: 'POST', body: JSON.stringify({ patientId, audioBase64 }) });
+}
+export async function sendTextInput(patientId, text) {
+  return request('/voice/text', { method: 'POST', body: JSON.stringify({ patientId, text }) });
+}
+
+const PIPER_URL = process.env.NEXT_PUBLIC_PIPER_URL || 'http://127.0.0.1:59125';
+export async function synthesizeWithPiper(text) {
+  const res = await fetch(`${PIPER_URL}/synthesize`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) throw new Error(`Piper TTS error: ${res.status}`);
+  const data = await res.json();
+  return { audioBase64: data.audioBase64, mimeType: data.mimeType || 'audio/wav' };
 }
 export async function getPatient(patientId) {
   return request(`/patient/${patientId}`);
