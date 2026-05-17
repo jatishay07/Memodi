@@ -8,8 +8,8 @@ import EmotionMonitor from '../../components/EmotionMonitor';
 import Ambient from '../../components/Ambient';
 import PatientNav from '../../components/PatientNav';
 import { useAuth } from '../../lib/auth';
-import { getPatient, sendVoiceInput } from '../../lib/api';
-import { requestAudioPermission, startRecording, stopRecordingAndGetBase64, playAudioBase64 } from '../../lib/audio';
+import { getPatient, sendTextInput, synthesizeWithPiper } from '../../lib/api';
+import { playAudioBase64, startSpeechRecognition, stopSpeechRecognition } from '../../lib/audio';
 
 function greeting(name) {
   const h = new Date().getHours();
@@ -56,7 +56,6 @@ export default function PatientPage() {
       .then(setPatient)
       .catch(() => setPatient({ name: user.name || 'Friend', nickname: user.name?.split(' ')[0] || 'Friend' }));
 
-    requestAudioPermission();
     setClock(formatClock());
     const t = setInterval(() => setClock(formatClock()), 60000);
     return () => clearInterval(t);
@@ -68,33 +67,42 @@ export default function PatientPage() {
     if (isProcessing) return;
     setError('');
 
-    if (!isRecording) {
-      try {
-        await startRecording();
-        setIsRecording(true);
-        setOrbState('listening');
-        setResponse('');
-      } catch {
-        setError('Microphone unavailable — please allow access in your browser.');
-      }
+    if (isRecording) {
+      stopSpeechRecognition();
+      setIsRecording(false);
+      return;
+    }
+
+    setIsRecording(true);
+    setOrbState('listening');
+    setResponse('');
+
+    let transcript;
+    try {
+      transcript = await startSpeechRecognition();
+    } catch (err) {
+      console.error('STT error:', err);
+      setError('Microphone unavailable — please allow access in your browser.');
+      setIsRecording(false);
+      setOrbState('idle');
       return;
     }
 
     setIsRecording(false);
+    if (!transcript?.trim()) { setOrbState('idle'); return; }
+
     setIsProcessing(true);
     setOrbState('thinking');
 
     try {
-      const base64 = await stopRecordingAndGetBase64();
-      if (!base64) { setOrbState('idle'); setIsProcessing(false); return; }
-
-      const result = await sendVoiceInput(user.patientId, base64);
+      const result = await sendTextInput(user.patientId, transcript.trim());
 
       setOrbState(result.isDistressed ? 'distress' : 'speaking');
       setResponse(result.response);
 
       if (audioRef.current) audioRef.current.pause();
-      const audio = await playAudioBase64(result.audioResponse);
+      const { audioBase64, mimeType } = await synthesizeWithPiper(result.response);
+      const audio = await playAudioBase64(audioBase64, mimeType);
       audioRef.current = audio;
       audio.onended = () => setOrbState('idle');
     } catch (err) {

@@ -59,6 +59,21 @@ export async function confirmPasswordReset(email, code, newPassword) {
 export async function sendVoiceInput(patientId, audioBase64) {
   return request('/voice', { method: 'POST', body: JSON.stringify({ patientId, audioBase64 }) });
 }
+export async function sendTextInput(patientId, text) {
+  return request('/voice/text', { method: 'POST', body: JSON.stringify({ patientId, text }) });
+}
+
+const PIPER_URL = process.env.NEXT_PUBLIC_PIPER_URL || 'http://127.0.0.1:59125';
+export async function synthesizeWithPiper(text) {
+  const res = await fetch(`${PIPER_URL}/synthesize`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) throw new Error(`Piper TTS error: ${res.status}`);
+  const data = await res.json();
+  return { audioBase64: data.audioBase64, mimeType: data.mimeType || 'audio/wav' };
+}
 export async function getPatient(patientId) {
   return request(`/patient/${patientId}`);
 }

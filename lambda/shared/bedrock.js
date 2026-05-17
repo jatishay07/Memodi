@@ -1,25 +1,23 @@
-import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
+import { BedrockAgentRuntimeClient, InvokeAgentCommand } from "@aws-sdk/client-bedrock-agent-runtime";
 
-const client = new BedrockRuntimeClient({ region: process.env.AWS_REGION || "us-east-1" });
+const agentClient = new BedrockAgentRuntimeClient({ region: process.env.AWS_REGION || "us-east-1" });
 
-export async function invokeClaude(systemPrompt, userMessage, maxTokens = 512) {
-  const payload = {
-    anthropic_version: "bedrock-2023-05-31",
-    max_tokens: maxTokens,
-    system: systemPrompt,
-    messages: [{ role: "user", content: userMessage }]
-  };
-
-  const command = new InvokeModelCommand({
-    modelId: process.env.BEDROCK_MODEL_ID || "anthropic.claude-sonnet-4-20250514",
-    contentType: "application/json",
-    accept: "application/json",
-    body: JSON.stringify(payload)
+export async function invokeAgent(sessionId, inputText) {
+  const command = new InvokeAgentCommand({
+    agentId: process.env.BEDROCK_AGENT_ID,
+    agentAliasId: process.env.BEDROCK_AGENT_ALIAS_ID || "TSTALIASID",
+    sessionId,
+    inputText,
   });
 
-  const response = await client.send(command);
-  const body = JSON.parse(new TextDecoder().decode(response.body));
-  return body.content[0].text;
+  const response = await agentClient.send(command);
+  let completion = "";
+  for await (const event of response.completion) {
+    if (event.chunk?.bytes) {
+      completion += new TextDecoder().decode(event.chunk.bytes);
+    }
+  }
+  return completion.trim();
 }
 
 export function extractJSON(text) {
