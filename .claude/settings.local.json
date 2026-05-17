@@ -11,7 +11,10 @@
       "Bash(pkill -f \"next dev\")",
       "Bash(netstat -ano)",
       "Bash(taskkill *)",
-      "PowerShell(Stop-Process *)"
+      "PowerShell(Stop-Process *)",
+      "Bash(Expand-Archive -Path \"C:\\\\Users\\\\sky\\\\Downloads\\\\memodi new feature.zip\" -DestinationPath \"C:\\\\Users\\\\sky\\\\Downloads\\\\memodi_new_feature\" -Force)",
+      "Bash(Get-ChildItem -Recurse \"C:\\\\Users\\\\sky\\\\Downloads\\\\memodi_new_feature\")",
+      "Bash(Select-Object FullName)"
     ]
   }
 }

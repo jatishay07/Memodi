@@ -57,17 +57,30 @@ export function isRecordingActive() {
 
 let recognition = null;
 
-export function startSpeechRecognition() {
+export function startSpeechRecognition({ onInterim } = {}) {
   return new Promise((resolve, reject) => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { reject(new Error('Speech recognition not supported in this browser')); return; }
     recognition = new SR();
     recognition.lang = 'en-US';
-    recognition.interimResults = false;
+    recognition.interimResults = !!onInterim;
     recognition.maxAlternatives = 1;
-    recognition.onresult = e => resolve(e.results[0][0].transcript);
+    recognition.continuous = false;
+
+    let finalTranscript = '';
+
+    recognition.onresult = e => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalTranscript += t;
+        else interim += t;
+      }
+      if (onInterim) onInterim(finalTranscript + interim);
+    };
+
     recognition.onerror = e => reject(new Error(e.error));
-    recognition.onend = () => { recognition = null; };
+    recognition.onend = () => { recognition = null; resolve(finalTranscript); };
     recognition.start();
   });
 }

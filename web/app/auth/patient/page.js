@@ -8,25 +8,7 @@ import { SignInPage, RegisterPage, AuthField } from '../../../components/ui/sign
 import Logo from '../../../components/Logo';
 
 const HERO = '/hero-fall.jpg';
-
-<<<<<<< Updated upstream
-const TESTIMONIALS = [
-  {
-    avatarSrc: 'https://randomuser.me/api/portraits/women/68.jpg',
-    name: 'Eleanor J.',
-    handle: 'Memodi user',
-    text: "I never feel alone now. Memodi always knows what I need to hear.",
-  },
-  {
-    avatarSrc: 'https://randomuser.me/api/portraits/men/77.jpg',
-    name: 'Robert M.',
-    handle: 'Memodi user',
-    text: "It remembers my family for me. That means the world.",
-  },
-];
-=======
 const PINK = '#DC4F7C';
->>>>>>> Stashed changes
 
 export default function PatientAuthPage() {
   const router = useRouter();
@@ -89,7 +71,7 @@ export default function PatientAuthPage() {
           </p>
           <div className="bg-vanilla-custard/30 border-2 border-white/90 rounded-2xl p-8 mb-6">
             <p className="text-xs text-ink-soft uppercase tracking-widest mb-3">Your connection code</p>
-            <p className="font-serif text-5xl font-medium tracking-widest" style={{ color: '#DC4F7C' }}>
+            <p className="font-serif text-5xl font-medium tracking-widest" style={{ color: PINK }}>
               {connectionCode}
             </p>
             <button
@@ -102,7 +84,7 @@ export default function PatientAuthPage() {
           <button
             onClick={() => router.replace('/patient')}
             className="w-full rounded-pill py-4 font-semibold text-white transition-all hover:opacity-90"
-            style={{ background: '#DC4F7C', boxShadow: '0 10px 28px rgba(220,79,124,0.35)' }}
+            style={{ background: PINK, boxShadow: '0 10px 28px rgba(220,79,124,0.35)' }}
           >
             Continue to Memodi
           </button>
@@ -118,18 +100,13 @@ export default function PatientAuthPage() {
         title="Join Memodi."
         description="Create your account and let Memodi care for you."
         heroImageSrc={HERO}
-<<<<<<< Updated upstream
-        testimonials={TESTIMONIALS}
-        accentColor="#DC4F7C"
-=======
         accentColor={PINK}
->>>>>>> Stashed changes
         onRegister={handleRegister}
         onSignIn={() => { setMode('login'); setError(''); }}
         loading={loading}
         error={error}
       >
-        <AuthField label="Full name"   name="name"     placeholder="Your name"          delay="animate-delay-200" />
+        <AuthField label="Full name"   name="name"     placeholder="Your name"           delay="animate-delay-200" />
         <AuthField label="Email"       name="email"    type="email" placeholder="your@email.com" delay="animate-delay-300" />
         <AuthField label="Password"    name="password" type="password" placeholder="Choose a password" delay="animate-delay-400" />
       </RegisterPage>
@@ -142,12 +119,7 @@ export default function PatientAuthPage() {
       title={<>Welcome<br /><span className="font-light">back.</span></>}
       description="Sign in to your Memodi account."
       heroImageSrc={HERO}
-<<<<<<< Updated upstream
-      testimonials={TESTIMONIALS}
-      accentColor="#DC4F7C"
-=======
       accentColor={PINK}
->>>>>>> Stashed changes
       onSignIn={handleLogin}
       onCreateAccount={() => { setMode('register'); setError(''); }}
       loading={loading}

@@ -92,3 +92,12 @@ export async function resolveAlert(alertId) {
 export async function getInteractions(patientId, limit = 50) {
   return request(`/interactions/${patientId}?limit=${limit}`);
 }
+export async function getMemoryBankPeople(patientId) {
+  try {
+    const data = await request(`/memory/${patientId}?category=person`);
+    const entries = Array.isArray(data) ? data : (data.memories || data.entries || []);
+    return entries.filter(e => (e.portrait || e.mediaUrl) && e.description);
+  } catch {
+    return [];
+  }
+}
