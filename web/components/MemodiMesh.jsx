@@ -16,38 +16,38 @@ export default function MemodiMesh() {
       <div style={{
         position: 'absolute', inset: '-20%',
         background: 'conic-gradient(from 40deg, #FCE9AB 0%, #FC8A2D 14%, #DC4F7C 28%, #C42B34 42%, #9E9820 58%, #FC8A2D 74%, #FCE9AB 88%, #FCE9AB 100%)',
-        filter: 'blur(80px)', opacity: 0.55,
-        animation: 'meshSpin 32s linear infinite',
+        filter: 'blur(80px)', opacity: 0.70,
+        animation: 'meshSpin 20s linear infinite',
       }} />
       {/* Layer 2: counter-rotating */}
       <div style={{
         position: 'absolute', inset: '-20%',
         background: 'conic-gradient(from 220deg, #FC8A2D 0%, #FCE9AB 30%, #DC4F7C 55%, #FCE9AB 78%, #9E9820 100%)',
-        filter: 'blur(110px)', opacity: 0.4,
+        filter: 'blur(110px)', opacity: 0.55,
         mixBlendMode: 'multiply',
-        animation: 'meshSpinReverse 48s linear infinite',
+        animation: 'meshSpinReverse 30s linear infinite',
       }} />
       {/* Drifting hotspot pools */}
       <div style={{
         position: 'absolute', top: '8%', left: '12%', width: '55%', height: '55%',
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(252,138,45,0.55), transparent 65%)',
+        background: 'radial-gradient(circle, rgba(252,138,45,0.72), transparent 65%)',
         filter: 'blur(60px)',
-        animation: 'meshDrift1 22s ease-in-out infinite',
+        animation: 'meshDrift1 12s ease-in-out infinite',
       }} />
       <div style={{
         position: 'absolute', top: '30%', right: '8%', width: '60%', height: '60%',
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(220,79,124,0.50), transparent 70%)',
+        background: 'radial-gradient(circle, rgba(220,79,124,0.68), transparent 70%)',
         filter: 'blur(70px)',
-        animation: 'meshDrift2 26s ease-in-out infinite',
+        animation: 'meshDrift2 14s ease-in-out infinite',
       }} />
       <div style={{
         position: 'absolute', bottom: '-10%', left: '20%', width: '70%', height: '55%',
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(158,152,32,0.32), transparent 70%)',
+        background: 'radial-gradient(circle, rgba(158,152,32,0.50), transparent 70%)',
         filter: 'blur(90px)',
-        animation: 'meshDrift3 30s ease-in-out infinite',
+        animation: 'meshDrift3 16s ease-in-out infinite',
       }} />
       {/* Cream wash — keeps text readable */}
       <div style={{

@@ -8,7 +8,10 @@ import { SignInPage, RegisterPage, AuthField } from '../../../components/ui/sign
 
 const HERO = '/hero-fall.jpg';
 
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 export default function CaregiverAuthPage() {
   const router = useRouter();
   const { login, user, ready } = useAuth();
@@ -68,6 +71,10 @@ export default function CaregiverAuthPage() {
         title="Join as caregiver."
         description="Connect with your loved one and keep them safe."
         heroImageSrc={HERO}
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
         accentColor="#FC8A2D"
         onRegister={handleRegister}
         onSignIn={() => { setMode('login'); setError(''); }}

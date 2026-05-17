@@ -194,9 +194,9 @@ input, textarea, select, button { font-family: var(--font-sans); }
 }
 @keyframes meshSpin        { from { transform: rotate(0deg); }   to { transform: rotate(360deg); } }
 @keyframes meshSpinReverse { from { transform: rotate(0deg); }   to { transform: rotate(-360deg); } }
-@keyframes meshDrift1      { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(40px,28px) scale(1.1); } }
-@keyframes meshDrift2      { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-50px,36px) scale(1.12); } }
-@keyframes meshDrift3      { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(28px,-24px) scale(1.08); } }
+@keyframes meshDrift1      { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(110px,70px) scale(1.22); } 66% { transform: translate(-60px,90px) scale(1.12); } }
+@keyframes meshDrift2      { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(-120px,80px) scale(1.25); } 66% { transform: translate(80px,-60px) scale(1.15); } }
+@keyframes meshDrift3      { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(90px,-80px) scale(1.2); } 66% { transform: translate(-70px,50px) scale(1.1); } }
 
 .anim-breath { animation: breath var(--dur-breath) var(--ease-breath) infinite; }
 .anim-drift  { animation: drift  var(--dur-blob)   var(--ease-breath) infinite; }

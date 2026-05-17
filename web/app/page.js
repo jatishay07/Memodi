@@ -49,8 +49,16 @@ export default function Landing() {
         </div>
 
         <nav style={{ display: 'flex', gap: 4 }}>
+<<<<<<< Updated upstream
           {['About', 'Help'].map(label => (
             <a key={label} href="#" style={{
+=======
+          {[
+            { label: 'About', href: '#' },
+            { label: 'Help', href: '#' },
+          ].map(item => (
+            <a key={item.label} href={item.href} style={{
+>>>>>>> Stashed changes
               color: 'rgba(61,52,42,0.72)', fontSize: 13, fontWeight: 400,
               padding: '8px 14px', borderRadius: 999, textDecoration: 'none',
               transition: 'all .2s ease',

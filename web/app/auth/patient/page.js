@@ -8,6 +8,10 @@ import { SignInPage, RegisterPage, AuthField } from '../../../components/ui/sign
 import Logo from '../../../components/Logo';
 
 const HERO = '/hero-fall.jpg';
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 const PINK = '#DC4F7C';
 
 export default function PatientAuthPage() {
@@ -100,6 +104,10 @@ export default function PatientAuthPage() {
         title="Join Memodi."
         description="Create your account and let Memodi care for you."
         heroImageSrc={HERO}
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
         accentColor={PINK}
         onRegister={handleRegister}
         onSignIn={() => { setMode('login'); setError(''); }}

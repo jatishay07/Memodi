@@ -20,5 +20,9 @@ if [[ -d services/deepface-emotion/.venv ]]; then
   for _ in {1..60}; do curl -sf http://127.0.0.1:59126/health >/dev/null && break; sleep 1; done
 fi
 
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 echo "→ http://localhost:3000/auth/patient"
 cd web && exec npm run dev
