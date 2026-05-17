@@ -55,7 +55,11 @@ export default function CaregiverAuthPage() {
     } catch (err) {
       const code = err?.response?.data?.code;
       if (code === 'EMAIL_NOT_VERIFIED') {
-        setError('Please verify your email before signing in. Check your inbox for the confirmation link.');
+        // Transition into the verify flow rather than showing a dead-end error
+        setVerifyEmail(fd.get('email') || '');
+        setVerifyCode('');
+        setVerifyError('');
+        setVerifyDone(false);
       } else {
         setError(err?.response?.data?.error || 'Incorrect email or password.');
       }
