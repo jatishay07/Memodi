@@ -5,7 +5,10 @@
     "deploy": "serverless deploy",
     "deploy:dev": "serverless deploy --stage dev",
     "remove": "serverless remove",
-    "logs:voice": "serverless logs -f processVoiceInput -t"
+    "logs:voice": "serverless logs -f processVoiceInput -t",
+    "dev": "bash scripts/dev.sh",
+    "piper:up": "bash scripts/start-piper.sh",
+    "deepface:up": "bash scripts/start-deepface.sh"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.0.0",
