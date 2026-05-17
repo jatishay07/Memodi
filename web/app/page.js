@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../lib/auth';
 import MemodiMesh from '../components/MemodiMesh';
+import Logo from '../components/Logo';
 
 export default function Landing() {
   const router = useRouter();
@@ -40,11 +41,11 @@ export default function Landing() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '26px 36px',
       }}>
-        <div style={{
-          fontFamily: 'var(--font-serif)', fontSize: 28, fontWeight: 500,
-          color: '#3d342a', letterSpacing: '-0.01em',
-        }}>
-          Memodi
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+          <img src="/logo-transparent.png" alt="Memodi" style={{ width: 36, height: 36, objectFit: 'contain', mixBlendMode: 'multiply' }} />
+          <span style={{ fontFamily: 'var(--font-sans)', fontSize: 20, fontWeight: 700, color: '#7B1B54', letterSpacing: '-0.02em', lineHeight: 1 }}>
+            memodi
+          </span>
         </div>
 
         <nav style={{ display: 'flex', gap: 4 }}>

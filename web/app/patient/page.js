@@ -145,7 +145,7 @@ export default function PatientPage() {
             transition: 'transform .8s ease',
             transform: response ? 'translateX(-80px) scale(0.75)' : 'translateX(0) scale(1)',
           }}>
-            <Orb state={orbState} size={response ? 260 : 320} />
+            <Orb state={orbState} size={response ? 390 : 480} />
           </div>
 
           {/* Response card */}
@@ -202,10 +202,11 @@ export default function PatientPage() {
               onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; }}
               onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
               style={{
-                width: 96, height: 96, borderRadius: '50%', border: 0,
+                width: 140, height: 56, borderRadius: 999, border: 0,
                 background: micActive ? '#C42B34' : '#DC4F7C',
                 color: '#fff', cursor: 'pointer',
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                gap: 10,
                 animation: micActive ? 'micPulse 1.5s ease-out infinite' : 'none',
                 transition: 'background .3s ease, transform .2s ease',
                 boxShadow: micActive
@@ -213,7 +214,7 @@ export default function PatientPage() {
                   : '0 8px 28px rgba(220,79,124,0.32)',
               }}
             >
-              <Mic size={40} />
+              <Mic size={22} />
             </button>
             <p style={{
               fontSize: 22 * textScale, color: '#6B6B6B',
