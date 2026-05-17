@@ -75,7 +75,9 @@ export const handler = async (event) => {
   return respond(201, {
     message: "Verification email sent. Please check your inbox.",
     patientId,
+    connectionCode,
     email,
     name,
+    needsVerification: true,
   });
 };

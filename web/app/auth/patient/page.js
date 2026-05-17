@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../lib/auth';
-import { registerPatient, loginPatient } from '../../../lib/api';
+import { registerPatient, loginPatient, verifyEmail as apiVerifyEmail, resendVerificationCode } from '../../../lib/api';
 import { SignInPage, RegisterPage, AuthField } from '../../../components/ui/sign-in';
-import Logo from '../../../components/Logo';
 
 const HERO = '/hero-fall.jpg';
 
@@ -24,6 +23,8 @@ const TESTIMONIALS = [
   },
 ];
 
+const PINK = '#DC4F7C';
+
 export default function PatientAuthPage() {
   const router = useRouter();
   const { login, user, ready } = useAuth();
@@ -31,7 +32,18 @@ export default function PatientAuthPage() {
   const [mode, setMode] = useState('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [connectionCode, setConnectionCode] = useState('');
+
+  // Post-registration state
+  const [verifyEmail, setVerifyEmail] = useState('');
+  const [verifyConnectionCode, setVerifyConnectionCode] = useState('');
+  const [verifyCode, setVerifyCode] = useState('');
+  const [verifyError, setVerifyError] = useState('');
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [verifyDone, setVerifyDone] = useState(false);
+
+  // Step 3: sign-in after verification
+  const [signInLoading, setSignInLoading] = useState(false);
+  const [signInError, setSignInError] = useState('');
 
   useEffect(() => {
     if (!ready) return;
@@ -48,9 +60,13 @@ export default function PatientAuthPage() {
       const data = await loginPatient({ email: fd.get('email'), password: fd.get('password') });
       login({ token: data.token, patientId: data.patientId, role: 'patient', name: data.name });
       router.replace('/patient');
-    } catch {
-      login({ token: 'dev-token', patientId: 'test-patient-1', role: 'patient', name: 'Margaret' });
-      router.replace('/patient');
+    } catch (err) {
+      const code = err?.response?.data?.code;
+      if (code === 'EMAIL_NOT_VERIFIED') {
+        setError('Please verify your email before signing in. Check your inbox for the confirmation code.');
+      } else {
+        setError(err?.response?.data?.error || 'Incorrect email or password.');
+      }
     } finally { setLoading(false); }
   }
 
@@ -59,55 +75,184 @@ export default function PatientAuthPage() {
     setError('');
     setLoading(true);
     const fd = new FormData(e.currentTarget);
-    const name = fd.get('name');
     try {
-      const data = await registerPatient({ name, email: fd.get('email'), password: fd.get('password') });
-      setConnectionCode(data.connectionCode);
-      login({ token: data.token, patientId: data.patientId, role: 'patient', name: data.name });
-    } catch {
-      const mockName = name || 'Margaret';
-      login({ token: 'dev-token', patientId: 'test-patient-1', role: 'patient', name: mockName });
-      setConnectionCode('DEMO-1234');
+      const data = await registerPatient({ name: fd.get('name'), email: fd.get('email'), password: fd.get('password') });
+      setVerifyEmail(data.email || fd.get('email'));
+      setVerifyConnectionCode(data.connectionCode || '');
+    } catch (err) {
+      setError(err?.response?.data?.error || 'Registration failed. Please try again.');
     } finally { setLoading(false); }
+  }
+
+  async function handleVerify(e) {
+    e.preventDefault();
+    setVerifyError('');
+    setVerifyLoading(true);
+    try {
+      await apiVerifyEmail(verifyEmail, verifyCode);
+      setVerifyDone(true);
+    } catch (err) {
+      setVerifyError(err?.response?.data?.error || 'Incorrect code. Try again.');
+    } finally { setVerifyLoading(false); }
+  }
+
+  async function handleResend() {
+    setVerifyError('');
+    try {
+      await resendVerificationCode(verifyEmail);
+      setVerifyError('New code sent — check your email.');
+    } catch {
+      setVerifyError('Could not resend. Try again shortly.');
+    }
+  }
+
+  async function handleSignInAfterVerify(e) {
+    e.preventDefault();
+    setSignInError('');
+    setSignInLoading(true);
+    const fd = new FormData(e.currentTarget);
+    try {
+      const data = await loginPatient({ email: verifyEmail, password: fd.get('password') });
+      login({ token: data.token, patientId: data.patientId, role: 'patient', name: data.name });
+      router.replace('/patient');
+    } catch (err) {
+      setSignInError(err?.response?.data?.error || 'Sign-in failed. Check your password.');
+    } finally { setSignInLoading(false); }
   }
 
   if (!ready) return null;
 
-  /* Connection code confirmation screen */
-  if (connectionCode) {
+  /* ── Step 2: Verify email ── */
+  if (verifyEmail && !verifyDone) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center bg-warm-white p-6">
-        <div className="w-full max-w-md bg-white/75 backdrop-blur-2xl border-2 border-white/85 rounded-[2rem] p-12 text-center shadow-xl">
-          <Logo iconSize={52} textSize={28} gap={10} />
-          <h2 className="font-serif text-4xl font-light text-ink mt-6 mb-3">Welcome.</h2>
-          <p className="text-ink-soft text-base mb-8">
-            Share this code with your caregiver so they can connect with you.
-          </p>
-          <div className="bg-vanilla-custard/30 border-2 border-white/90 rounded-2xl p-8 mb-6">
-            <p className="text-xs text-ink-soft uppercase tracking-widest mb-3">Your connection code</p>
-            <p className="font-serif text-5xl font-medium tracking-widest" style={{ color: '#DC4F7C' }}>
-              {connectionCode}
+      <Shell>
+        <p style={{ fontSize: 40, margin: '0 0 16px', textAlign: 'center' }}>✉️</p>
+        <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 30, fontWeight: 400, color: '#2D2D2D', margin: '0 0 8px', textAlign: 'center' }}>
+          Check your email
+        </h2>
+        <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: '#6B6B6B', lineHeight: 1.6, margin: '0 0 20px', textAlign: 'center' }}>
+          We sent a 6-digit code to <strong>{verifyEmail}</strong>.
+        </p>
+        <form onSubmit={handleVerify} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <input
+            type="text"
+            inputMode="numeric"
+            maxLength={6}
+            placeholder="000000"
+            value={verifyCode}
+            onChange={e => { setVerifyError(''); setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6)); }}
+            style={{
+              padding: '16px 20px', borderRadius: 16, textAlign: 'center',
+              border: `2px solid ${verifyError && !verifyError.includes('sent') ? '#C42B34' : `rgba(220,79,124,0.30)`}`,
+              background: '#FFF9F0', fontFamily: 'var(--font-serif)',
+              fontSize: 32, color: '#2D2D2D', letterSpacing: '0.25em',
+              outline: 'none', width: '100%', boxSizing: 'border-box',
+            }}
+            onFocus={e => { e.currentTarget.style.borderColor = PINK; }}
+            onBlur={e => { if (!verifyError || verifyError.includes('sent')) e.currentTarget.style.borderColor = 'rgba(220,79,124,0.30)'; }}
+          />
+          {verifyError && (
+            <p style={{ fontSize: 13, color: verifyError.includes('sent') ? '#6B6B6B' : '#C42B34', margin: 0, textAlign: 'center' }}>
+              {verifyError}
             </p>
-            <button
-              onClick={() => navigator.clipboard?.writeText(connectionCode)}
-              className="mt-3 text-xs text-ink-faint hover:text-ink-soft transition-colors"
-            >
-              Copy to clipboard
-            </button>
-          </div>
+          )}
           <button
-            onClick={() => router.replace('/patient')}
-            className="w-full rounded-pill py-4 font-semibold text-white transition-all hover:opacity-90"
-            style={{ background: '#DC4F7C', boxShadow: '0 10px 28px rgba(220,79,124,0.35)' }}
+            type="submit"
+            disabled={verifyCode.length !== 6 || verifyLoading}
+            style={{
+              padding: '15px 20px', borderRadius: 999, border: 0,
+              background: PINK, color: '#fff', fontSize: 16, fontWeight: 700,
+              cursor: verifyCode.length === 6 ? 'pointer' : 'not-allowed',
+              opacity: verifyCode.length !== 6 || verifyLoading ? 0.5 : 1,
+              fontFamily: 'var(--font-sans)',
+              boxShadow: '0 8px 24px rgba(220,79,124,0.28)',
+            }}
           >
-            Continue to Memodi
+            {verifyLoading ? 'Verifying…' : 'Verify email'}
           </button>
-        </div>
-      </div>
+          <button type="button" onClick={handleResend} style={{
+            background: 'none', border: 'none', color: '#9C9C9C',
+            fontSize: 13, cursor: 'pointer', fontFamily: 'var(--font-sans)',
+          }}>
+            Didn&apos;t get it? Resend code
+          </button>
+        </form>
+      </Shell>
     );
   }
 
-  /* Register mode */
+  /* ── Step 3: Verified — show connection code + sign in ── */
+  if (verifyEmail && verifyDone) {
+    return (
+      <Shell>
+        <p style={{ fontSize: 40, margin: '0 0 12px', textAlign: 'center' }}>✅</p>
+        <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 30, fontWeight: 400, color: '#2D2D2D', margin: '0 0 16px', textAlign: 'center' }}>
+          Email verified!
+        </h2>
+
+        {verifyConnectionCode && (
+          <div style={{
+            background: 'rgba(220,79,124,0.06)',
+            border: '2px solid rgba(220,79,124,0.20)',
+            borderRadius: 20, padding: '20px 24px', marginBottom: 24, textAlign: 'center',
+          }}>
+            <p style={{ fontFamily: 'var(--font-sans)', fontSize: 11, fontWeight: 700, color: PINK, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 8px' }}>
+              Your connection code
+            </p>
+            <p style={{ fontFamily: 'var(--font-serif)', fontSize: 38, fontWeight: 400, color: '#2D2D2D', margin: '0 0 6px', letterSpacing: '0.18em', lineHeight: 1 }}>
+              {verifyConnectionCode}
+            </p>
+            <p style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: '#9C9C9C', margin: 0 }}>
+              Share this with your caregiver so they can connect.
+            </p>
+            <button
+              onClick={() => navigator.clipboard?.writeText(verifyConnectionCode)}
+              style={{ marginTop: 8, background: 'none', border: 'none', color: PINK, fontSize: 12, cursor: 'pointer', fontFamily: 'var(--font-sans)', fontWeight: 600 }}
+            >
+              Copy code
+            </button>
+          </div>
+        )}
+
+        <p style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: '#6B6B6B', margin: '0 0 16px', textAlign: 'center' }}>
+          Sign in to enter Memodi.
+        </p>
+        <form onSubmit={handleSignInAfterVerify} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <input
+            name="password"
+            type="password"
+            placeholder="Your password"
+            required
+            style={{
+              padding: '13px 16px', borderRadius: 14,
+              border: `2px solid rgba(220,79,124,0.20)`,
+              background: 'rgba(255,255,255,0.80)',
+              fontSize: 16, fontFamily: 'var(--font-sans)', color: '#2D2D2D',
+              outline: 'none', width: '100%', boxSizing: 'border-box',
+            }}
+            onFocus={e => { e.currentTarget.style.borderColor = 'rgba(220,79,124,0.55)'; }}
+            onBlur={e => { e.currentTarget.style.borderColor = 'rgba(220,79,124,0.20)'; }}
+          />
+          {signInError && <p style={{ color: '#C42B34', fontSize: 13, margin: 0, textAlign: 'center' }}>{signInError}</p>}
+          <button
+            type="submit"
+            disabled={signInLoading}
+            style={{
+              padding: '15px 20px', borderRadius: 999, border: 0,
+              background: PINK, color: '#fff', fontSize: 16, fontWeight: 700,
+              cursor: 'pointer', opacity: signInLoading ? 0.6 : 1,
+              fontFamily: 'var(--font-sans)',
+              boxShadow: '0 8px 24px rgba(220,79,124,0.28)',
+            }}
+          >
+            {signInLoading ? 'Signing in…' : 'Enter Memodi'}
+          </button>
+        </form>
+      </Shell>
+    );
+  }
+
+  /* ── Register mode ── */
   if (mode === 'register') {
     return (
       <RegisterPage
@@ -115,31 +260,52 @@ export default function PatientAuthPage() {
         description="Create your account and let Memodi care for you."
         heroImageSrc={HERO}
         testimonials={TESTIMONIALS}
-        accentColor="#DC4F7C"
+        accentColor={PINK}
         onRegister={handleRegister}
         onSignIn={() => { setMode('login'); setError(''); }}
         loading={loading}
         error={error}
       >
-        <AuthField label="Full name"   name="name"     placeholder="Your name"          delay="animate-delay-200" />
-        <AuthField label="Email"       name="email"    type="email" placeholder="your@email.com" delay="animate-delay-300" />
-        <AuthField label="Password"    name="password" type="password" placeholder="Choose a password" delay="animate-delay-400" />
+        <AuthField label="Full name" name="name"     placeholder="Your name"          delay="animate-delay-200" />
+        <AuthField label="Email"     name="email"    type="email"    placeholder="your@email.com"   delay="animate-delay-300" />
+        <AuthField label="Password"  name="password" type="password" placeholder="Choose a password" delay="animate-delay-400" />
       </RegisterPage>
     );
   }
 
-  /* Sign-in mode (default) */
+  /* ── Sign-in mode (default) ── */
   return (
     <SignInPage
       title={<>Welcome<br /><span className="font-light">back.</span></>}
       description="Sign in to your Memodi account."
       heroImageSrc={HERO}
       testimonials={TESTIMONIALS}
-      accentColor="#DC4F7C"
+      accentColor={PINK}
       onSignIn={handleLogin}
       onCreateAccount={() => { setMode('register'); setError(''); }}
       loading={loading}
       error={error}
     />
+  );
+}
+
+function Shell({ children }) {
+  return (
+    <div style={{
+      minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'linear-gradient(135deg, #FFF9F0 0%, #FFFBF7 40%, rgba(252,233,171,0.10) 100%)',
+      padding: '32px 16px',
+    }}>
+      <div style={{
+        width: '100%', maxWidth: 440,
+        background: 'rgba(255,255,255,0.88)',
+        backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+        border: '2px solid rgba(255,255,255,0.95)',
+        borderRadius: 32, padding: '40px 36px',
+        boxShadow: '0 24px 60px rgba(45,45,45,0.12)',
+      }}>
+        {children}
+      </div>
+    </div>
   );
 }

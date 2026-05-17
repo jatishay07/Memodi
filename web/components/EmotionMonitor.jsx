@@ -236,11 +236,6 @@ export default function EmotionMonitor({ onDistressChange, active = true }) {
             </div>
           )}
 
-          {status === 'no-analysis' && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-              <p className="text-white text-xs" style={{ opacity: 0.7 }}>Analysis unavailable</p>
-            </div>
-          )}
         </div>
       )}
 
