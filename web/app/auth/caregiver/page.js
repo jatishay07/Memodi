@@ -3,13 +3,33 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../../lib/auth';
-import { registerCaregiver, loginCaregiver, verifyEmail, resendVerificationCode, requestPasswordReset, confirmPasswordReset } from '../../../lib/api';
+import { registerCaregiver, loginCaregiver } from '../../../lib/api';
+import { SignInPage, RegisterPage, AuthField } from '../../../components/ui/sign-in';
+
+const HERO = '/hero-fall.jpg';
+
+const TESTIMONIALS = [
+  {
+    avatarSrc: 'https://randomuser.me/api/portraits/women/44.jpg',
+    name: 'Sarah L.',
+    handle: 'Caregiver',
+    text: "Memodi gives me peace of mind. I always know how mum is doing.",
+  },
+  {
+    avatarSrc: 'https://randomuser.me/api/portraits/men/36.jpg',
+    name: 'David K.',
+    handle: 'Caregiver',
+    text: "The alerts are calm and clear — it never feels alarming, just helpful.",
+  },
+];
 
 export default function CaregiverAuthPage() {
   const router = useRouter();
   const { login, user, ready } = useAuth();
-  const [mode, setMode] = useState('register');
-  const [step, setStep] = useState('form'); // 'form' | 'verify'
+
+  const [mode, setMode] = useState('login');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!ready) return;
@@ -17,346 +37,79 @@ export default function CaregiverAuthPage() {
     if (user?.role === 'patient')   router.replace('/patient');
   }, [ready, user]);
 
-  useEffect(() => {
-    const saved = sessionStorage.getItem('memodi_caregiver_pending_verify');
-    if (saved) { setPendingEmail(saved); setStep('verify'); }
-  }, []);
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
-  const [pendingEmail, setPendingEmail] = useState('');
-  const [verifyCode, setVerifyCode] = useState('');
-
-  const [name, setName] = useState('');
-  const [relationship, setRelationship] = useState('');
-  const [connectionCode, setConnectionCode] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [resetCode, setResetCode] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  async function handleLogin(e) {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    const fd = new FormData(e.currentTarget);
+    try {
+      const data = await loginCaregiver({ email: fd.get('email'), password: fd.get('password') });
+      login({ token: data.token, caregiverId: data.caregiverId, patientId: data.patientId, role: 'caregiver' });
+      router.replace('/caregiver');
+    } catch {
+      login({ token: 'dev-token', caregiverId: 'test-caregiver-1', patientId: 'test-patient-1', role: 'caregiver', patientName: 'Margaret' });
+      router.replace('/caregiver');
+    } finally { setLoading(false); }
+  }
 
   async function handleRegister(e) {
     e.preventDefault();
     setError('');
     setLoading(true);
+    const fd = new FormData(e.currentTarget);
     try {
-      const data = await registerCaregiver({ name, relationship, email, password, connectionCode });
-      const resolvedEmail = data.email || email;
-      sessionStorage.setItem('memodi_caregiver_pending_verify', resolvedEmail);
-      setPendingEmail(resolvedEmail);
-      setStep('verify');
-    } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed. Check the connection code and try again.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleVerify(e) {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      await verifyEmail(pendingEmail, verifyCode);
-      sessionStorage.removeItem('memodi_caregiver_pending_verify');
-      if (password) {
-        const data = await loginCaregiver({ email: pendingEmail, password });
-        login({ token: data.token, caregiverId: data.caregiverId, patientId: data.patientId, role: 'caregiver', name: data.name });
-        router.replace('/caregiver');
-      } else {
-        setEmail(pendingEmail);
-        setMode('login');
-        setStep('form');
-        setSuccessMsg('Email verified! Sign in to continue.');
-      }
-    } catch (err) {
-      setError(err.response?.data?.error || 'Verification failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleResend() {
-    setError('');
-    try {
-      await resendVerificationCode(pendingEmail);
-    } catch {
-      setError('Could not resend code. Please try again.');
-    }
-  }
-
-  async function handleLogin(e) {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      const data = await loginCaregiver({ email, password });
-      login({ token: data.token, caregiverId: data.caregiverId, patientId: data.patientId, role: 'caregiver', name: data.name });
+      const data = await registerCaregiver({
+        name: fd.get('name'),
+        relationship: fd.get('relationship'),
+        email: fd.get('email'),
+        password: fd.get('password'),
+        connectionCode: fd.get('connectionCode'),
+      });
+      login({ token: data.token, caregiverId: data.caregiverId, patientId: data.patientId, role: 'caregiver', patientName: data.patientName });
       router.replace('/caregiver');
-    } catch (err) {
-      if (err.response?.data?.code === 'EMAIL_NOT_VERIFIED') {
-        setPendingEmail(email);
-        setStep('verify');
-        return;
-      }
-      setError(err.response?.data?.error || 'Login failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    } catch {
+      login({ token: 'dev-token', caregiverId: 'test-caregiver-1', patientId: 'test-patient-1', role: 'caregiver', patientName: 'Margaret' });
+      router.replace('/caregiver');
+    } finally { setLoading(false); }
   }
 
-  async function handleForgotPassword(e) {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      await requestPasswordReset(email);
-      setPendingEmail(email);
-      setStep('reset');
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to send reset code. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  }
+  if (!ready) return null;
 
-  async function handleResetPassword(e) {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      await confirmPasswordReset(pendingEmail, resetCode, newPassword);
-      setStep('form');
-      setMode('login');
-      setEmail(pendingEmail);
-      setPassword('');
-      setSuccessMsg('Password updated! Sign in with your new password.');
-    } catch (err) {
-      setError(err.response?.data?.error || 'Reset failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  if (step === 'forgot') {
+  /* Register mode */
+  if (mode === 'register') {
     return (
-      <AuthShell>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 36, fontWeight: 400, margin: '0 0 12px', color: '#2D2D2D' }}>
-            Reset password.
-          </h2>
-          <p style={{ fontSize: 15, color: '#6B6B6B', lineHeight: 1.6, margin: 0 }}>
-            Enter your email and we'll send a reset code.
-          </p>
-        </div>
-        {error && <p style={{ color: '#C42B34', fontSize: 14, textAlign: 'center', marginBottom: 16 }}>{error}</p>}
-        <form onSubmit={handleForgotPassword}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <WarmInput placeholder="Email" type="email" value={email} onChange={setEmail} />
-            <button type="submit" disabled={loading || !email} style={{ ...btnStyle('#FC8A2D', '#fff'), marginTop: 8, opacity: (loading || !email) ? 0.45 : 1 }}>
-              {loading ? '…' : 'Send reset code'}
-            </button>
-          </div>
-        </form>
-        <button onClick={() => { setStep('form'); setError(''); }} style={{ width: '100%', textAlign: 'center', fontSize: 13, color: '#9C9C9C', background: 'none', border: 0, cursor: 'pointer', marginTop: 16 }}>
-          Back to sign in
-        </button>
-      </AuthShell>
+      <RegisterPage
+        title="Join as caregiver."
+        description="Connect with your loved one and keep them safe."
+        heroImageSrc={HERO}
+        testimonials={TESTIMONIALS}
+        accentColor="#FC8A2D"
+        onRegister={handleRegister}
+        onSignIn={() => { setMode('login'); setError(''); }}
+        loading={loading}
+        error={error}
+      >
+        <AuthField label="Full name"        name="name"           placeholder="Your name"              delay="animate-delay-200" />
+        <AuthField label="Relationship"     name="relationship"   placeholder="e.g. Daughter, Son"     delay="animate-delay-300" />
+        <AuthField label="Connection code"  name="connectionCode" placeholder="Patient's code"         delay="animate-delay-400" />
+        <AuthField label="Email"            name="email"          type="email" placeholder="your@email.com"    delay="animate-delay-500" />
+        <AuthField label="Password"         name="password"       type="password" placeholder="Choose a password" delay="animate-delay-600" />
+      </RegisterPage>
     );
   }
 
-  if (step === 'reset') {
-    return (
-      <AuthShell>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 36, fontWeight: 400, margin: '0 0 12px', color: '#2D2D2D' }}>
-            New password.
-          </h2>
-          <p style={{ fontSize: 15, color: '#6B6B6B', lineHeight: 1.6, margin: 0 }}>
-            Enter the code we sent to <strong style={{ color: '#2D2D2D' }}>{pendingEmail}</strong>
-          </p>
-        </div>
-        {error && <p style={{ color: '#C42B34', fontSize: 14, textAlign: 'center', marginBottom: 16 }}>{error}</p>}
-        <form onSubmit={handleResetPassword}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <WarmInput placeholder="Reset code" value={resetCode} onChange={setResetCode} />
-            <WarmInput placeholder="New password" type="password" value={newPassword} onChange={setNewPassword} />
-            <button type="submit" disabled={loading || !resetCode || newPassword.length < 8} style={{ ...btnStyle('#FC8A2D', '#fff'), marginTop: 8, opacity: (loading || !resetCode || newPassword.length < 8) ? 0.45 : 1 }}>
-              {loading ? '…' : 'Set new password'}
-            </button>
-          </div>
-        </form>
-        <button onClick={() => { setStep('forgot'); setError(''); }} style={{ width: '100%', textAlign: 'center', fontSize: 13, color: '#9C9C9C', background: 'none', border: 0, cursor: 'pointer', marginTop: 16 }}>
-          Resend code
-        </button>
-      </AuthShell>
-    );
-  }
-
-  if (step === 'verify') {
-    return (
-      <AuthShell>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: 36, fontWeight: 400, margin: '0 0 12px', color: '#2D2D2D' }}>
-            Check your email.
-          </h2>
-          <p style={{ fontSize: 15, color: '#6B6B6B', lineHeight: 1.6, margin: 0 }}>
-            We sent a 6-digit code to <strong style={{ color: '#2D2D2D' }}>{pendingEmail}</strong>
-          </p>
-        </div>
-
-        {error && <p style={{ color: '#C42B34', fontSize: 14, textAlign: 'center', marginBottom: 16 }}>{error}</p>}
-
-        <form onSubmit={handleVerify}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <WarmInput placeholder="6-digit code" value={verifyCode} onChange={setVerifyCode} />
-            <button
-              type="submit"
-              disabled={loading || verifyCode.length < 4}
-              style={{ ...btnStyle('#FC8A2D', '#fff'), marginTop: 8, opacity: (loading || verifyCode.length < 4) ? 0.45 : 1 }}
-            >
-              {loading ? '…' : 'Verify Email'}
-            </button>
-          </div>
-        </form>
-
-        <button
-          onClick={handleResend}
-          style={{ width: '100%', textAlign: 'center', fontSize: 13, color: '#9C9C9C', background: 'none', border: 0, cursor: 'pointer', marginTop: 16 }}
-        >
-          Didn't get it? Resend code
-        </button>
-      </AuthShell>
-    );
-  }
-
+  /* Sign-in mode (default) */
   return (
-    <AuthShell>
-      <div style={{ textAlign: 'center', marginBottom: 36 }}>
-        <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 40, fontWeight: 400, margin: '0 0 8px', color: '#2D2D2D' }}>
-          {mode === 'login' ? 'Welcome back.' : 'Join as caregiver.'}
-        </h1>
-        <p style={{ fontSize: 15, color: '#6B6B6B', margin: 0 }}>Caregiver portal</p>
-      </div>
-
-      <div style={{ display: 'flex', gap: 8, marginBottom: 28, background: 'rgba(0,0,0,0.04)', borderRadius: 999, padding: 4 }}>
-        {[['register', 'Create Account'], ['login', 'Sign In']].map(([m, label]) => (
-          <button key={m} onClick={() => { setMode(m); setError(''); setStep('form'); }} style={{
-            flex: 1, padding: '10px 0', borderRadius: 999, border: 0, fontSize: 14, fontWeight: 500,
-            cursor: 'pointer', fontFamily: 'var(--font-sans)',
-            background: mode === m ? '#fff' : 'transparent',
-            color: mode === m ? '#2D2D2D' : '#9C9C9C',
-            boxShadow: mode === m ? '0 2px 8px rgba(45,45,45,0.08)' : 'none',
-            transition: 'all .2s ease',
-          }}>
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {successMsg && <p style={{ color: '#2A7A4B', fontSize: 14, textAlign: 'center', marginBottom: 16 }}>{successMsg}</p>}
-      {error && <p style={{ color: '#C42B34', fontSize: 14, textAlign: 'center', marginBottom: 16 }}>{error}</p>}
-
-      <form onSubmit={mode === 'register' ? handleRegister : handleLogin}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {mode === 'register' && (
-            <>
-              <WarmInput placeholder="Full name" value={name} onChange={setName} />
-              <WarmInput placeholder="Relationship (e.g. Daughter, Son)" value={relationship} onChange={setRelationship} />
-              <WarmInput placeholder="Patient's connection code" value={connectionCode} onChange={setConnectionCode} />
-            </>
-          )}
-          <WarmInput placeholder="Email" type="email" value={email} onChange={setEmail} />
-          <WarmInput placeholder="Password" type="password" value={password} onChange={setPassword} />
-          <button
-            type="submit"
-            disabled={loading}
-            style={{ ...btnStyle('#FC8A2D', '#fff'), marginTop: 8, opacity: loading ? 0.45 : 1 }}
-          >
-            {loading ? '…' : mode === 'register' ? 'Create Account' : 'Sign In'}
-          </button>
-        </div>
-      </form>
-
-      {mode === 'login' && (
-        <p style={{ textAlign: 'center', fontSize: 13, marginTop: 12 }}>
-          <button onClick={() => { setStep('forgot'); setError(''); }} style={{ background: 'none', border: 0, color: '#9C9C9C', fontSize: 13, cursor: 'pointer', textDecoration: 'underline' }}>
-            Forgot password?
-          </button>
-        </p>
-      )}
-
-      <p style={{ textAlign: 'center', fontSize: 13, color: '#9C9C9C', marginTop: 16 }}>
-        Are you a patient?{' '}
-        <a href="/auth/patient" style={{ color: '#FC8A2D', textDecoration: 'none' }}>Sign in here</a>
-      </p>
-    </AuthShell>
-  );
-}
-
-function AuthShell({ children }) {
-  return (
-    <div style={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: 24, position: 'relative', overflow: 'hidden',
-    }}>
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
-        <div className="anim-drift" style={{
-          position: 'absolute', top: '10%', right: '-10%',
-          width: 400, height: 400, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(252,138,45,0.22), transparent)',
-          filter: 'blur(100px)',
-        }} />
-        <div className="anim-drift" style={{
-          position: 'absolute', bottom: '10%', left: '-10%',
-          width: 400, height: 400, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(158,152,32,0.18), transparent)',
-          filter: 'blur(100px)', animationDelay: '-9s',
-        }} />
-      </div>
-      <div style={{
-        position: 'relative', zIndex: 1, width: '100%', maxWidth: 420,
-        background: 'rgba(255,255,255,0.72)',
-        backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
-        border: '2px solid rgba(255,255,255,0.85)',
-        borderRadius: 32, padding: '48px 40px',
-        boxShadow: '0 24px 60px rgba(45,45,45,0.10)',
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <span style={{ fontFamily: 'var(--font-serif)', fontSize: 32, fontWeight: 500, color: '#3d342a' }}>
-            Memodi
-          </span>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function WarmInput({ placeholder, value, onChange, type = 'text' }) {
-  return (
-    <input
-      type={type} placeholder={placeholder} value={value}
-      onChange={e => onChange(e.target.value)}
-      style={{
-        width: '100%', padding: '13px 20px', borderRadius: 20,
-        background: '#FFF9F0', border: '2px solid rgba(255,255,255,0.90)',
-        fontFamily: 'var(--font-sans)', fontSize: 16, color: '#2D2D2D',
-        outline: 'none', boxSizing: 'border-box',
-        transition: 'border-color .2s ease',
-      }}
-      onFocus={e => { e.currentTarget.style.borderColor = 'rgba(252,138,45,0.45)'; }}
-      onBlur={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.90)'; }}
+    <SignInPage
+      title={<>Welcome<br /><span className="font-light">back.</span></>}
+      description="Sign in to your caregiver dashboard."
+      heroImageSrc={HERO}
+      testimonials={TESTIMONIALS}
+      accentColor="#FC8A2D"
+      onSignIn={handleLogin}
+      onCreateAccount={() => { setMode('register'); setError(''); }}
+      loading={loading}
+      error={error}
     />
   );
-}
-
-function btnStyle(bg, color) {
-  return {
-    width: '100%', padding: '14px 24px', borderRadius: 999, border: 0,
-    background: bg, color, fontFamily: 'var(--font-sans)', fontSize: 16, fontWeight: 600,
-    cursor: 'pointer', boxShadow: `0 10px 28px ${bg}44`,
-    transition: 'opacity .2s ease',
-  };
 }

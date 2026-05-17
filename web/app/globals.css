@@ -202,6 +202,65 @@ input, textarea, select, button { font-family: var(--font-sans); }
 .anim-drift  { animation: drift  var(--dur-blob)   var(--ease-breath) infinite; }
 .anim-float  { animation: floatUp 5s var(--ease-breath) infinite; }
 
+/* ── Auth page entrance animations ── */
+@keyframes fadeSlideIn {
+  from { opacity: 0; filter: blur(8px); transform: translateY(14px); }
+  to   { opacity: 1; filter: blur(0);   transform: translateY(0); }
+}
+@keyframes slideRightIn {
+  from { opacity: 0; filter: blur(8px); transform: translateX(48px); }
+  to   { opacity: 1; filter: blur(0);   transform: translateX(0); }
+}
+@keyframes testimonialIn {
+  from { opacity: 0; filter: blur(8px); transform: translateY(20px) scale(0.96); }
+  to   { opacity: 1; filter: blur(0);   transform: translateY(0) scale(1); }
+}
+
+.animate-element      { opacity: 0; animation: fadeSlideIn   0.55s ease forwards; }
+.animate-slide-right  { opacity: 0; animation: slideRightIn  0.75s ease forwards; }
+.animate-testimonial  { opacity: 0; animation: testimonialIn 0.75s ease forwards; }
+
+.animate-delay-0    { animation-delay: 0ms; }
+.animate-delay-100  { animation-delay: 80ms; }
+.animate-delay-200  { animation-delay: 160ms; }
+.animate-delay-300  { animation-delay: 240ms; }
+.animate-delay-400  { animation-delay: 320ms; }
+.animate-delay-500  { animation-delay: 400ms; }
+.animate-delay-600  { animation-delay: 480ms; }
+.animate-delay-700  { animation-delay: 560ms; }
+.animate-delay-800  { animation-delay: 640ms; }
+.animate-delay-900  { animation-delay: 720ms; }
+.animate-delay-1000 { animation-delay: 800ms; }
+.animate-delay-1100 { animation-delay: 880ms; }
+.animate-delay-1200 { animation-delay: 960ms; }
+.animate-delay-1400 { animation-delay: 1120ms; }
+
+/* Custom checkbox */
+.custom-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 6px;
+  border: 2px solid rgba(0,0,0,0.18);
+  background: #FFF9F0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.custom-checkbox:checked { border-color: currentColor; background: currentColor; }
+.custom-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  width: 10px; height: 6px;
+  border-left: 2px solid white;
+  border-bottom: 2px solid white;
+  transform: rotate(-45deg) translate(0px, -1px);
+}
+
 .emotion-mirror {
   transform: scaleX(-1);
 }
@@ -210,6 +269,33 @@ input, textarea, select, button { font-family: var(--font-sans); }
 ::-webkit-scrollbar        { width: 4px; }
 ::-webkit-scrollbar-track  { background: transparent; }
 ::-webkit-scrollbar-thumb  { background: rgba(45,45,45,0.15); border-radius: 2px; }
+
+/* ── Patient onboarding + comfort ── */
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes buttonBreathe {
+  0%, 100% { transform: scale(1);     box-shadow: 0 8px 32px rgba(220,79,124,0.30); }
+  50%       { transform: scale(1.025); box-shadow: 0 12px 44px rgba(220,79,124,0.44); }
+}
+@keyframes bubbleFloat {
+  /* Uses standalone `translate` so it composes with `transform` centering offsets */
+  0%, 100% { translate: 0 0px; }
+  50%       { translate: 0 -4px; }
+}
+@keyframes comfortTrayIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+@keyframes lightBloom {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50%       { opacity: 1;    transform: scale(1.06); }
+}
+@keyframes responseFadeIn {
+  from { opacity: 0; transform: translateX(32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
 
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {

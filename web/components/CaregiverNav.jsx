@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Logo from './Logo';
 
 const TABS = [
   { href: '/caregiver', label: 'Alerts',       badge: true },
@@ -24,12 +25,7 @@ export default function CaregiverNav({ onSignOut, unread = 0 }) {
         maxWidth: 1240, margin: '0 auto',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
-          <span style={{
-            fontFamily: 'var(--font-serif)', fontSize: 28, fontWeight: 500,
-            color: '#4a3f33', letterSpacing: 'normal',
-          }}>
-            Memodi
-          </span>
+          <Logo iconSize={34} textSize={20} gap={8} />
           <div style={{ display: 'flex', gap: 8 }}>
             {TABS.map(tab => {
               const active = path === tab.href;

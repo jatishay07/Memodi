@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Logo from './Logo';
 
 const NAV_ITEMS = [
   { href: '/patient',       label: 'Dashboard',    icon: '⌂' },
@@ -16,6 +17,8 @@ export default function PatientNav({ onSignOut }) {
       position: 'absolute', top: 24, left: 32, zIndex: 50,
       display: 'flex', gap: 12, alignItems: 'center',
     }}>
+      <Logo iconSize={32} textSize={18} gap={7} />
+
       {NAV_ITEMS.map(item => {
         const active = path === item.href;
         return (
